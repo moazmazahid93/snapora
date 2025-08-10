@@ -1,0 +1,558 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}Upload Video | snapora{% endblock %}
+
+{% block content %}
+<div class="upload-container">
+    <div class="upload-card neon-card">
+        <div class="card-header neon-header">
+            <h2><i class="fas fa-cloud-upload-alt me-2"></i> Upload Your Video</h2>
+            <p class="mb-0">Share your content with the snapora community</p>
+        </div>
+        
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" id="upload-form">
+                {% csrf_token %}
+                
+                <!-- Video Upload Section -->
+                <div class="upload-section">
+                    <div class="upload-preview">
+                        <div class="file-drop-area neon-drop-area" id="drop-area">
+                            <div class="file-input-wrapper">
+                                <input type="file" id="id_video_file" name="video_file" accept="video/*" class="file-input">
+                                <label for="id_video_file" class="file-label">
+                                    <div class="upload-icon neon-icon">
+                                        <i class="fas fa-video"></i>
+                                    </div>
+                                    <h4 class="neon-text">Select video to upload</h4>
+                                    <p class="text-muted">or drag and drop video file</p>
+                                    <div class="file-requirements">
+                                        <small>MP4 or WebM • Up to 500MB • 720p or higher recommended</small>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="video-preview neon-preview" id="video-preview">
+                            <video id="preview-player" controls style="display:none;">
+                                <source src="" type="video/mp4">
+                                Your browser doesn't support HTML5 video tag.
+                            </video>
+                            <div class="preview-placeholder">
+                                <i class="fas fa-video neon-icon"></i>
+                                <p class="neon-text">Video preview will appear here</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-container" id="progress-container" style="display:none;">
+                        <div class="progress neon-progress">
+                            <div class="progress-bar neon-progress-bar" id="upload-progress" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <small class="progress-text neon-text" id="progress-text">Uploading: 0%</small>
+                    </div>
+                </div>
+                
+                <!-- Video Details Section -->
+                <div class="details-section">
+                    <div class="form-group">
+                        {{ form.title|as_crispy_field }}
+                        <small class="text-muted">Make it catchy and descriptive (max 100 characters)</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        {{ form.description|as_crispy_field }}
+                        <small class="text-muted">Tell viewers about your video (max 500 characters)</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        {{ form.thumbnail|as_crispy_field }}
+                        <small class="text-muted">Select an eye-catching thumbnail (optional)</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        {{ form.tags|as_crispy_field }}
+                        <small class="text-muted">Add relevant tags separated by commas (max 5 tags)</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        {{ form.visibility|as_crispy_field }}
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="reset" class="btn btn-outline-secondary neon-btn">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary neon-btn" id="submit-btn" disabled>
+                        <i class="fas fa-cloud-upload-alt"></i> Upload Video
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Base Styles */
+    :root {
+        --neon-yellow: #fff01f;
+        --neon-yellow-dark: #e6d800;
+        --neon-yellow-light: #ffff70;
+        --dark-bg: #121212;
+        --darker-bg: #1a1a1a;
+        --card-bg: #1e1e1e;
+        --text-color: #e0e0e0;
+        --text-muted: #888;
+        --neon-glow: 0 0 10px rgba(255, 240, 31, 0.8), 
+                      0 0 20px rgba(255, 240, 31, 0.6),
+                      0 0 30px rgba(255, 240, 31, 0.4);
+    }
+    
+    body {
+        background-color: var(--dark-bg);
+        color: var(--text-color);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    /* Neon Text */
+    .neon-text {
+        color: var(--neon-yellow);
+        text-shadow: 0 0 5px var(--neon-yellow-light);
+    }
+    
+    /* Neon Icons */
+    .neon-icon {
+        color: var(--neon-yellow);
+        text-shadow: var(--neon-glow);
+    }
+    
+    /* Neon Buttons */
+    .neon-btn {
+        background: transparent;
+        color: var(--neon-yellow);
+        border: 1px solid var(--neon-yellow);
+        border-radius: 4px;
+        padding: 8px 16px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .neon-btn::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: rgba(255, 240, 31, 0.1);
+        transform: rotate(45deg);
+        transition: all 0.6s ease;
+        opacity: 0;
+    }
+    
+    .neon-btn:hover {
+        background: rgba(255, 240, 31, 0.1);
+        box-shadow: var(--neon-glow);
+        color: var(--neon-yellow-light);
+    }
+    
+    .neon-btn:hover::before {
+        animation: shine 1.5s;
+    }
+    
+    .neon-btn:active {
+        transform: translateY(1px);
+    }
+    
+    .neon-btn.btn-primary {
+        background: rgba(255, 240, 31, 0.2);
+    }
+    
+    .neon-btn.btn-primary:hover {
+        background: rgba(255, 240, 31, 0.3);
+    }
+    
+    @keyframes shine {
+        0% {
+            opacity: 0;
+            left: -50%;
+        }
+        50% {
+            opacity: 0.3;
+        }
+        100% {
+            opacity: 0;
+            left: 150%;
+        }
+    }
+    
+    /* Main Container */
+    .upload-container {
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+    
+    /* Card Styling */
+    .upload-card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 0 20px rgba(255, 240, 31, 0.1);
+    }
+    
+    .neon-header {
+        background: linear-gradient(135deg, rgba(255, 240, 31, 0.1) 0%, rgba(255, 240, 31, 0.05) 100%);
+        color: var(--neon-yellow);
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(255, 240, 31, 0.2);
+    }
+    
+    .card-header h2 {
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .card-header p {
+        opacity: 0.9;
+    }
+    
+    .card-body {
+        padding: 2rem;
+    }
+    
+    /* Upload Section */
+    .upload-section {
+        margin-bottom: 2rem;
+    }
+    
+    .upload-preview {
+        display: flex;
+        gap: 2rem;
+    }
+    
+    @media (max-width: 768px) {
+        .upload-preview {
+            flex-direction: column;
+        }
+    }
+    
+    .neon-drop-area {
+        flex: 1;
+        border: 2px dashed rgba(255, 240, 31, 0.3);
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        position: relative;
+        background: rgba(26, 26, 26, 0.5);
+    }
+    
+    .file-drop-area.highlight {
+        border-color: var(--neon-yellow);
+        background-color: rgba(255, 240, 31, 0.05);
+        box-shadow: var(--neon-glow);
+    }
+    
+    .file-input-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+    }
+    
+    .file-input {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+    
+    .upload-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .file-requirements {
+        margin-top: 1rem;
+        color: var(--text-muted);
+    }
+    
+    .neon-preview {
+        flex: 1;
+        border-radius: 8px;
+        overflow: hidden;
+        background: rgba(26, 26, 26, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 200px;
+        border: 1px solid rgba(255, 240, 31, 0.2);
+    }
+    
+    #preview-player {
+        width: 100%;
+        height: auto;
+        max-height: 300px;
+    }
+    
+    .preview-placeholder {
+        text-align: center;
+        color: var(--text-muted);
+    }
+    
+    .preview-placeholder i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    
+    /* Progress Bar */
+    .progress-container {
+        margin-top: 1rem;
+    }
+    
+    .neon-progress {
+        height: 8px;
+        border-radius: 4px;
+        background: rgba(255, 240, 31, 0.1);
+        margin-bottom: 0.5rem;
+        overflow: visible;
+    }
+    
+    .neon-progress-bar {
+        background: var(--neon-yellow);
+        transition: width 0.3s ease;
+        box-shadow: var(--neon-glow);
+    }
+    
+    /* Details Section */
+    .details-section {
+        margin-bottom: 2rem;
+    }
+    
+    /* Form Actions */
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(255, 240, 31, 0.1);
+    }
+    
+    /* Crispy Forms Overrides */
+    .form-group label {
+        font-weight: 500;
+        color: var(--neon-yellow);
+    }
+    
+    .form-control {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        background: var(--darker-bg);
+        border: 1px solid rgba(255, 240, 31, 0.2);
+        color: var(--text-color);
+    }
+    
+    .form-control:focus {
+        border-color: var(--neon-yellow);
+        box-shadow: var(--neon-glow);
+        background: var(--darker-bg);
+        color: white;
+    }
+    
+    .text-muted {
+        color: var(--text-muted) !important;
+    }
+    
+    /* Animations */
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 5px var(--neon-yellow-light);
+        }
+        50% {
+            box-shadow: 0 0 20px var(--neon-yellow-light);
+        }
+        100% {
+            box-shadow: 0 0 5px var(--neon-yellow-light);
+        }
+    }
+    
+    .pulse {
+        animation: pulse 2s infinite;
+    }
+    
+    /* Responsive Adjustments */
+    @media (max-width: 576px) {
+        .card-header h2 {
+            font-size: 1.5rem;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropArea = document.getElementById('drop-area');
+        const fileInput = document.getElementById('id_video_file');
+        const videoPreview = document.getElementById('video-preview');
+        const previewPlayer = document.getElementById('preview-player');
+        const previewPlaceholder = videoPreview.querySelector('.preview-placeholder');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('upload-progress');
+        const progressText = document.getElementById('progress-text');
+        const submitBtn = document.getElementById('submit-btn');
+        const uploadForm = document.getElementById('upload-form');
+        
+        // Add pulse animation to upload card
+        const uploadCard = document.querySelector('.upload-card');
+        setInterval(() => {
+            uploadCard.classList.toggle('pulse');
+        }, 3000);
+        
+        // Prevent default drag behaviors
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        // Highlight drop area when item is dragged over it
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            dropArea.classList.add('highlight');
+        }
+        
+        function unhighlight() {
+            dropArea.classList.remove('highlight');
+        }
+        
+        // Handle dropped files
+        dropArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+        
+        // Handle selected files
+        fileInput.addEventListener('change', function() {
+            handleFiles(this.files);
+        });
+        
+        function handleFiles(files) {
+            if (files.length > 0) {
+                const file = files[0];
+                
+                // Check if file is a video
+                if (!file.type.match('video.*')) {
+                    alert('Please select a video file');
+                    return;
+                }
+                
+                // Check file size (500MB limit)
+                if (file.size > 500 * 1024 * 1024) {
+                    alert('File size exceeds 500MB limit');
+                    return;
+                }
+                
+                // Preview video
+                const videoURL = URL.createObjectURL(file);
+                previewPlayer.src = videoURL;
+                previewPlayer.style.display = 'block';
+                previewPlaceholder.style.display = 'none';
+                
+                // Enable submit button
+                submitBtn.disabled = false;
+                
+                // Add glow effect to preview
+                videoPreview.style.boxShadow = '0 0 15px rgba(255, 240, 31, 0.5)';
+            }
+        }
+        
+        // Form submission with progress tracking
+        uploadForm.addEventListener('submit', function(e) {
+            const formData = new FormData(uploadForm);
+            const xhr = new XMLHttpRequest();
+            
+            // Show progress bar
+            progressContainer.style.display = 'block';
+            
+            xhr.upload.addEventListener('progress', function(e) {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    progressBar.style.width = percentComplete + '%';
+                    progressText.textContent = 'Uploading: ' + Math.round(percentComplete) + '%';
+                    
+                    if (percentComplete >= 100) {
+                        progressText.textContent = 'Processing video...';
+                    }
+                }
+            });
+            
+            xhr.open('POST', '', true);
+            xhr.send(formData);
+        });
+        
+        // Character counters
+        const titleField = document.getElementById('id_title');
+        const descriptionField = document.getElementById('id_description');
+        
+        if (titleField) {
+            const titleCounter = document.createElement('small');
+            titleCounter.className = 'text-muted float-end';
+            titleCounter.textContent = titleField.value.length + '/100';
+            titleField.parentNode.appendChild(titleCounter);
+            
+            titleField.addEventListener('input', function() {
+                titleCounter.textContent = this.value.length + '/100';
+                if (this.value.length > 100) {
+                    titleCounter.classList.add('text-danger');
+                } else {
+                    titleCounter.classList.remove('text-danger');
+                }
+            });
+        }
+        
+        if (descriptionField) {
+            const descCounter = document.createElement('small');
+            descCounter.className = 'text-muted float-end';
+            descCounter.textContent = descriptionField.value.length + '/500';
+            descriptionField.parentNode.appendChild(descCounter);
+            
+            descriptionField.addEventListener('input', function() {
+                descCounter.textContent = this.value.length + '/500';
+                if (this.value.length > 500) {
+                    descCounter.classList.add('text-danger');
+                } else {
+                    descCounter.classList.remove('text-danger');
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

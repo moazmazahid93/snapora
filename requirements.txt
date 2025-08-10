@@ -1,0 +1,10 @@
+Django
+gunicorn
+psycopg2-binary
+whitenoise
+python-dotenv
+django-crispy-forms
+crispy-bootstrap5
+django-extensions
+whitenoise
+pillow

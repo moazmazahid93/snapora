@@ -1,0 +1,1137 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ video.title }} | snapora{% endblock %}
+
+{% block content %}
+<div class="video-page-container">
+    <div class="video-main-content">
+        <!-- Video Player Section -->
+        <div class="video-player-container">
+            <div class="video-wrapper">
+                <video id="main-video" class="w-100" controls autoplay playsinline>
+                    <source src="{{ video.video_file.url }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <div class="video-controls-overlay">
+                    <button class="btn btn-control play-pause-btn neon-btn">
+                        <i class="fas fa-play"></i>
+                    </button>
+                    <div class="video-progress-container">
+                        <div class="video-progress-bar"></div>
+                    </div>
+                    <div class="video-time-display neon-text">
+                        <span class="current-time">0:00</span> / <span class="duration">0:00</span>
+                    </div>
+                    <button class="btn btn-control fullscreen-btn neon-btn">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Video Info Section -->
+            <div class="video-info-section">
+                <div class="video-title-section">
+                    <h1 class="video-title neon-text">{{ video.title }}</h1>
+                    <div class="video-stats">
+                        <span class="views-count">{{ video.views.count }} views</span>
+                        <span class="upload-date">{{ video.created_at|timesince }} ago</span>
+                    </div>
+                </div>
+                
+                <div class="video-actions">
+                    <form action="{% url 'interactions:like_video' video.id %}" method="post" class="like-form">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-like neon-btn {% if user_like and user_like.is_like %}liked{% endif %}">
+                            <i class="fas fa-heart"></i>
+                            <span class="like-count">{{ video.like_count }}</span>
+                        </button>
+                    </form>
+                    
+                    <button class="btn btn-share neon-btn" data-bs-toggle="modal" data-bs-target="#shareModal">
+                        <i class="fas fa-share"></i> Share
+                    </button>
+                    
+                    {% if request.user == video.user %}
+                    <div class="dropdown video-options">
+                        <button class="btn btn-options dropdown-toggle neon-btn" type="button" id="videoOptionsDropdown" data-bs-toggle="dropdown">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end neon-dropdown">
+                            <li><a class="dropdown-item" href="{% url 'videos:edit' video.id %}"><i class="fas fa-edit me-2"></i>Edit</a></li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'videos:delete' video.id %}"><i class="fas fa-trash me-2"></i>Delete</a></li>
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Creator Info Section -->
+            <div class="creator-info-section">
+                <a href="{% url 'users:profile' video.user.username %}" class="creator-avatar neon-avatar">
+                    {% if video.user.profile_pic %}
+                        <img src="{{ video.user.profile_pic.url }}" alt="{{ video.user.username }}" class="rounded-circle">
+                    {% else %}
+                        <div class="default-avatar">
+                            {{ video.user.username|first|upper }}
+                        </div>
+                    {% endif %}
+                </a>
+                <div class="creator-details">
+                    <a href="{% url 'users:profile' video.user.username %}" class="creator-username neon-text">
+                        {{ video.user.username }}
+                    </a>
+                    {% if video.user.user_type == 'creator' %}
+                    <span class="badge creator-badge neon-badge">Creator</span>
+                    {% endif %}
+                    <p class="creator-subscribers">{{ video.user.follower_count }} subscribers</p>
+                </div>
+                {% if request.user != video.user %}
+                <form action="{% url 'users:follow_user' video.user.username %}" method="post" class="subscribe-form">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-subscribe neon-btn {% if is_following %}subscribed{% endif %}">
+                        {% if is_following %}Subscribed{% else %}Subscribe{% endif %}
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+            
+            <!-- Video Description -->
+            <div class="video-description">
+                <div class="description-text">
+                    {{ video.description }}
+                </div>
+                <div class="video-tags">
+                    {% for tag in video.tags.all %}
+                    <a href="{% url 'videos:tag' tag.slug %}" class="tag neon-tag">#{{ tag.name }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Comments Section -->
+        <div class="comments-section">
+            <div class="comments-header">
+                <h3 class="neon-text">{{ video.comment_count }} Comments</h3>
+                <div class="sort-options">
+                    <button class="btn btn-sort active neon-btn">Top Comments</button>
+                    <button class="btn btn-sort neon-btn">Newest First</button>
+                </div>
+            </div>
+            
+            <!-- Add Comment Form -->
+            {% if request.user.is_authenticated %}
+            <form method="post" action="{% url 'interactions:add_comment' video.id %}" class="add-comment-form">
+                {% csrf_token %}
+                <div class="comment-input-container">
+                    <div class="comment-avatar neon-avatar">
+                        {% if request.user.profile_pic %}
+                            <img src="{{ request.user.profile_pic.url }}" alt="{{ request.user.username }}" class="rounded-circle">
+                        {% else %}
+                            <div class="default-avatar">
+                                {{ request.user.username|first|upper }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="comment-input-wrapper">
+                        <textarea name="text" placeholder="Add a comment..." class="comment-input neon-input"></textarea>
+                        <div class="comment-buttons">
+                            <button type="button" class="btn btn-cancel neon-btn">Cancel</button>
+                            <button type="submit" class="btn btn-comment neon-btn">Comment</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            {% else %}
+            <div class="login-prompt neon-text">
+                <a href="{% url 'users:login' %}" class="neon-link">Login</a> to leave a comment
+            </div>
+            {% endif %}
+            
+            <!-- Comments List -->
+            <div class="comments-list">
+                {% for comment in comments %}
+                <div class="comment-item">
+                    <a href="{% url 'users:profile' comment.user.username %}" class="comment-avatar neon-avatar">
+                        {% if comment.user.profile_pic %}
+                            <img src="{{ comment.user.profile_pic.url }}" alt="{{ comment.user.username }}" class="rounded-circle">
+                        {% else %}
+                            <div class="default-avatar">
+                                {{ comment.user.username|first|upper }}
+                            </div>
+                        {% endif %}
+                    </a>
+                    <div class="comment-content">
+                        <div class="comment-header">
+                            <a href="{% url 'users:profile' comment.user.username %}" class="comment-username neon-text">
+                                {{ comment.user.username }}
+                            </a>
+                            <span class="comment-time">{{ comment.created_at|timesince }} ago</span>
+                        </div>
+                        <div class="comment-text neon-text">
+                            {{ comment.text }}
+                        </div>
+                        <div class="comment-actions">
+                            <button class="btn btn-like-comment neon-btn">
+                                <i class="fas fa-thumbs-up"></i> 12
+                            </button>
+                            <button class="btn btn-reply neon-btn" data-comment-id="{{ comment.id }}">
+                                Reply
+                            </button>
+                            {% if request.user == comment.user %}
+                            <form method="post" action="{% url 'interactions:delete_comment' comment.id %}" class="delete-comment-form">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-delete-comment neon-btn">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Replies Section -->
+                        {% if comment.replies.all %}
+                        <div class="replies-container">
+                            {% for reply in comment.replies.all %}
+                            <div class="reply-item">
+                                <a href="{% url 'users:profile' reply.user.username %}" class="reply-avatar neon-avatar">
+                                    {% if reply.user.profile_pic %}
+                                        <img src="{{ reply.user.profile_pic.url }}" alt="{{ reply.user.username }}" class="rounded-circle">
+                                    {% else %}
+                                        <div class="default-avatar">
+                                            {{ reply.user.username|first|upper }}
+                                        </div>
+                                    {% endif %}
+                                </a>
+                                <div class="reply-content">
+                                    <div class="reply-header">
+                                        <a href="{% url 'users:profile' reply.user.username %}" class="reply-username neon-text">
+                                            {{ reply.user.username }}
+                                        </a>
+                                        <span class="reply-time">{{ reply.created_at|timesince }} ago</span>
+                                    </div>
+                                    <div class="reply-text neon-text">
+                                        {{ reply.text }}
+                                    </div>
+                                    <div class="reply-actions">
+                                        <button class="btn btn-like-reply neon-btn">
+                                            <i class="fas fa-thumbs-up"></i> 5
+                                        </button>
+                                        {% if request.user == reply.user %}
+                                        <form method="post" action="{% url 'interactions:delete_comment' reply.id %}" class="delete-reply-form">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-delete-reply neon-btn">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Reply Form (Hidden by default) -->
+                        {% if request.user.is_authenticated %}
+                        <form method="post" action="{% url 'interactions:add_comment' video.id %}" class="reply-form" id="reply-form-{{ comment.id }}" style="display: none;">
+                            {% csrf_token %}
+                            <input type="hidden" name="parent_id" value="{{ comment.id }}">
+                            <div class="reply-input-container">
+                                <div class="reply-avatar neon-avatar">
+                                    {% if request.user.profile_pic %}
+                                        <img src="{{ request.user.profile_pic.url }}" alt="{{ request.user.username }}" class="rounded-circle">
+                                    {% else %}
+                                        <div class="default-avatar">
+                                            {{ request.user.username|first|upper }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="reply-input-wrapper">
+                                    <textarea name="text" placeholder="Write a reply..." class="reply-input neon-input"></textarea>
+                                    <div class="reply-buttons">
+                                        <button type="button" class="btn btn-cancel-reply neon-btn" data-comment-id="{{ comment.id }}">Cancel</button>
+                                        <button type="submit" class="btn btn-post-reply neon-btn">Reply</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="no-comments">
+                    <i class="fas fa-comment-slash neon-text"></i>
+                    <p class="neon-text">No comments yet</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar with Related Videos -->
+    <div class="video-sidebar">
+        <div class="sidebar-section">
+            <h4 class="sidebar-title neon-text">More from {{ video.user.username }}</h4>
+            <div class="related-videos">
+                {% for related_video in video.user.videos.all|slice:":5" %}
+                    {% if related_video.id != video.id %}
+                    <a href="{% url 'videos:watch' related_video.id %}" class="related-video neon-card">
+                        <div class="video-thumbnail">
+                            {% if related_video.thumbnail %}
+                                <img src="{{ related_video.thumbnail.url }}" alt="{{ related_video.title }}" class="thumbnail-img">
+                            {% else %}
+                                <div class="thumbnail-placeholder">
+                                    <i class="fas fa-video"></i>
+                                </div>
+                            {% endif %}
+                            <span class="video-duration neon-badge">2:45</span>
+                        </div>
+                        <div class="video-info">
+                            <h5 class="video-title neon-text">{{ related_video.title|truncatechars:50 }}</h5>
+                            <p class="video-author">{{ related_video.user.username }}</p>
+                            <p class="video-stats">{{ related_video.views.count }} views • {{ related_video.created_at|timesince }} ago</p>
+                        </div>
+                    </a>
+                    {% endif %}
+                {% empty %}
+                <div class="no-videos neon-text">
+                    <p>No other videos from this creator</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="sidebar-section">
+            <h4 class="sidebar-title neon-text">Recommended Videos</h4>
+            <div class="recommended-videos">
+                <!-- You would populate this with your recommendation algorithm -->
+                {% for rec_video in recommended_videos|slice:":5" %}
+                <a href="{% url 'videos:watch' rec_video.id %}" class="recommended-video neon-card">
+                    <div class="video-thumbnail">
+                        {% if rec_video.thumbnail %}
+                            <img src="{{ rec_video.thumbnail.url }}" alt="{{ rec_video.title }}" class="thumbnail-img">
+                        {% else %}
+                            <div class="thumbnail-placeholder">
+                                <i class="fas fa-video"></i>
+                            </div>
+                        {% endif %}
+                        <span class="video-duration neon-badge">3:22</span>
+                    </div>
+                    <div class="video-info">
+                        <h5 class="video-title neon-text">{{ rec_video.title|truncatechars:50 }}</h5>
+                        <p class="video-author">{{ rec_video.user.username }}</p>
+                        <p class="video-stats">{{ rec_video.views.count }} views • {{ rec_video.created_at|timesince }} ago</p>
+                    </div>
+                </a>
+                {% empty %}
+                <div class="no-videos neon-text">
+                    <p>No recommended videos</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Share Modal -->
+<div class="modal fade" id="shareModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content neon-modal">
+            <div class="modal-header">
+                <h5 class="modal-title neon-text">Share Video</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="share-options">
+                    <button class="btn btn-share-option neon-btn">
+                        <i class="fab fa-facebook"></i> Facebook
+                    </button>
+                    <button class="btn btn-share-option neon-btn">
+                        <i class="fab fa-twitter"></i> Twitter
+                    </button>
+                    <button class="btn btn-share-option neon-btn">
+                        <i class="fab fa-whatsapp"></i> WhatsApp
+                    </button>
+                    <button class="btn btn-share-option neon-btn">
+                        <i class="fas fa-envelope"></i> Email
+                    </button>
+                </div>
+                <div class="share-link">
+                    <input type="text" value="{{ request.build_absolute_uri }}" class="form-control neon-input" id="shareLink" readonly>
+                    <button class="btn btn-copy neon-btn" onclick="copyShareLink()">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Base Styles */
+    :root {
+        --neon-yellow: #fff01f;
+        --neon-yellow-dark: #e6d800;
+        --neon-yellow-light: #ffff70;
+        --dark-bg: #121212;
+        --darker-bg: #0a0a0a;
+        --card-bg: #1a1a1a;
+        --text-color: #e0e0e0;
+        --text-muted: #888;
+        --neon-glow: 0 0 10px rgba(255, 240, 31, 0.8), 
+                      0 0 20px rgba(255, 240, 31, 0.6),
+                      0 0 30px rgba(255, 240, 31, 0.4);
+    }
+    
+    body {
+        background-color: var(--dark-bg);
+        color: var(--text-color);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    /* Neon Text */
+    .neon-text {
+        color: var(--neon-yellow);
+        text-shadow: 0 0 5px var(--neon-yellow-light);
+    }
+    
+    .neon-link {
+        color: var(--neon-yellow);
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .neon-link:hover {
+        color: var(--neon-yellow-light);
+        text-shadow: var(--neon-glow);
+    }
+    
+    /* Neon Buttons */
+    .neon-btn {
+        background: transparent;
+        color: var(--neon-yellow);
+        border: 1px solid var(--neon-yellow);
+        border-radius: 4px;
+        padding: 8px 16px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .neon-btn::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: rgba(255, 240, 31, 0.1);
+        transform: rotate(45deg);
+        transition: all 0.6s ease;
+        opacity: 0;
+    }
+    
+    .neon-btn:hover {
+        background: rgba(255, 240, 31, 0.1);
+        box-shadow: var(--neon-glow);
+        color: var(--neon-yellow-light);
+    }
+    
+    .neon-btn:hover::before {
+        animation: shine 1.5s;
+    }
+    
+    .neon-btn:active {
+        transform: translateY(1px);
+    }
+    
+    .neon-btn.liked, .neon-btn.subscribed {
+        background: rgba(255, 240, 31, 0.2);
+        box-shadow: var(--neon-glow);
+    }
+    
+    @keyframes shine {
+        0% {
+            opacity: 0;
+            left: -50%;
+        }
+        50% {
+            opacity: 0.3;
+        }
+        100% {
+            opacity: 0;
+            left: 150%;
+        }
+    }
+    
+    /* Neon Inputs */
+    .neon-input {
+        background: var(--card-bg);
+        border: 1px solid var(--neon-yellow);
+        color: var(--neon-yellow-light);
+        padding: 10px 15px;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+    }
+    
+    .neon-input:focus {
+        outline: none;
+        box-shadow: var(--neon-glow);
+        background: rgba(26, 26, 26, 0.8);
+    }
+    
+    /* Neon Badges */
+    .neon-badge {
+        background: rgba(255, 240, 31, 0.1);
+        color: var(--neon-yellow);
+        border: 1px solid var(--neon-yellow);
+        font-weight: 500;
+    }
+    
+    /* Neon Avatars */
+    .neon-avatar {
+        position: relative;
+        border-radius: 50%;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .neon-avatar::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-radius: 50%;
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+    }
+    
+    .neon-avatar:hover::after {
+        border-color: var(--neon-yellow);
+        box-shadow: var(--neon-glow);
+    }
+    
+    /* Neon Tags */
+    .neon-tag {
+        color: var(--neon-yellow);
+        text-decoration: none;
+        padding: 4px 8px;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+    }
+    
+    .neon-tag:hover {
+        background: rgba(255, 240, 31, 0.1);
+        box-shadow: var(--neon-glow);
+    }
+    
+    /* Neon Cards */
+    .neon-card {
+        display: flex;
+        gap: 12px;
+        padding: 12px;
+        border-radius: 8px;
+        text-decoration: none;
+        color: var(--text-color);
+        transition: all 0.3s ease;
+        background: var(--card-bg);
+        border: 1px solid transparent;
+    }
+    
+    .neon-card:hover {
+        border-color: var(--neon-yellow);
+        box-shadow: var(--neon-glow);
+        transform: translateY(-2px);
+    }
+    
+    /* Neon Dropdown */
+    .neon-dropdown {
+        background: var(--card-bg);
+        border: 1px solid var(--neon-yellow);
+        box-shadow: var(--neon-glow);
+    }
+    
+    .neon-dropdown .dropdown-item {
+        color: var(--text-color);
+        transition: all 0.3s ease;
+    }
+    
+    .neon-dropdown .dropdown-item:hover {
+        background: rgba(255, 240, 31, 0.1);
+        color: var(--neon-yellow);
+    }
+    
+    /* Neon Modal */
+    .neon-modal {
+        background: var(--card-bg);
+        border: 1px solid var(--neon-yellow);
+        box-shadow: var(--neon-glow);
+    }
+    
+    /* Main Layout */
+    .video-page-container {
+        display: flex;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+        gap: 24px;
+    }
+    
+    .video-main-content {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .video-sidebar {
+        width: 400px;
+        flex-shrink: 0;
+    }
+    
+    @media (max-width: 1200px) {
+        .video-page-container {
+            flex-direction: column;
+        }
+        
+        .video-sidebar {
+            width: 100%;
+        }
+    }
+    
+    /* Video Player */
+    .video-player-container {
+        background: #000;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 24px;
+        border: 1px solid var(--neon-yellow);
+        box-shadow: var(--neon-glow);
+    }
+    
+    .video-wrapper {
+        position: relative;
+        padding-top: 56.25%; /* 16:9 Aspect Ratio */
+    }
+    
+    #main-video {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+    
+    .video-controls-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(transparent, rgba(0,0,0,0.7));
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .video-wrapper:hover .video-controls-overlay {
+        opacity: 1;
+    }
+    
+    .video-progress-container {
+        flex: 1;
+        height: 5px;
+        background: rgba(255,255,255,0.2);
+        margin: 0 10px;
+        border-radius: 3px;
+        cursor: pointer;
+    }
+    
+    .video-progress-bar {
+        height: 100%;
+        background: var(--neon-yellow);
+        border-radius: 3px;
+        width: 0%;
+        box-shadow: 0 0 5px var(--neon-yellow-light);
+    }
+    
+    .video-time-display {
+        color: var(--neon-yellow);
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        min-width: 100px;
+        text-align: center;
+    }
+    
+    /* Video Info Section */
+    .video-info-section {
+        padding: 16px;
+        background: var(--card-bg);
+        border-radius: 8px;
+        margin-bottom: 16px;
+        border: 1px solid rgba(255, 240, 31, 0.3);
+    }
+    
+    .video-title {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        letter-spacing: 0.5px;
+    }
+    
+    .video-stats {
+        color: var(--text-muted);
+        font-size: 14px;
+        margin-bottom: 16px;
+        display: flex;
+        gap: 16px;
+    }
+    
+    .video-actions {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    
+    /* Creator Info Section */
+    .creator-info-section {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px;
+        background: var(--card-bg);
+        border-radius: 8px;
+        margin-bottom: 16px;
+        border: 1px solid rgba(255, 240, 31, 0.3);
+    }
+    
+    .creator-avatar {
+        width: 56px;
+        height: 56px;
+    }
+    
+    .default-avatar {
+        width: 100%;
+        height: 100%;
+        background: var(--neon-yellow);
+        color: #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 24px;
+    }
+    
+    .creator-details {
+        flex: 1;
+    }
+    
+    .creator-username {
+        font-weight: 700;
+        font-size: 18px;
+        margin-bottom: 4px;
+        display: inline-block;
+    }
+    
+    .creator-subscribers {
+        color: var(--text-muted);
+        font-size: 14px;
+        margin: 4px 0 0;
+    }
+    
+    /* Video Description */
+    .video-description {
+        padding: 16px;
+        background: var(--card-bg);
+        border-radius: 8px;
+        margin-bottom: 24px;
+        border: 1px solid rgba(255, 240, 31, 0.3);
+    }
+    
+    .description-text {
+        white-space: pre-line;
+        margin-bottom: 16px;
+        line-height: 1.6;
+    }
+    
+    .video-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    /* Comments Section */
+    .comments-section {
+        margin-top: 24px;
+        background: var(--card-bg);
+        padding: 24px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 240, 31, 0.3);
+    }
+    
+    .comments-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+    }
+    
+    .sort-options {
+        display: flex;
+        gap: 8px;
+    }
+    
+    /* Add Comment Form */
+    .add-comment-form {
+        margin-bottom: 24px;
+    }
+    
+    .comment-input-container {
+        display: flex;
+        gap: 16px;
+    }
+    
+    .comment-avatar {
+        width: 48px;
+        height: 48px;
+    }
+    
+    .comment-input-wrapper {
+        flex: 1;
+    }
+    
+    .comment-input {
+        width: 100%;
+        background: var(--darker-bg);
+        border: 1px solid var(--neon-yellow);
+        color: var(--text-color);
+        padding: 12px;
+        border-radius: 8px;
+        resize: none;
+        min-height: 80px;
+        transition: all 0.3s ease;
+    }
+    
+    .comment-input:focus {
+        outline: none;
+        box-shadow: var(--neon-glow);
+    }
+    
+    .comment-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 12px;
+    }
+    
+    /* Comments List */
+    .comments-list {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+    
+    .comment-item {
+        display: flex;
+        gap: 16px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid rgba(255, 240, 31, 0.1);
+    }
+    
+    .comment-content {
+        flex: 1;
+    }
+    
+    .comment-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+    
+    .comment-username {
+        font-weight: 600;
+        font-size: 16px;
+    }
+    
+    .comment-time {
+        color: var(--text-muted);
+        font-size: 13px;
+    }
+    
+    .comment-text {
+        margin-bottom: 12px;
+        line-height: 1.5;
+    }
+    
+    .comment-actions {
+        display: flex;
+        gap: 16px;
+    }
+    
+    /* Replies */
+    .replies-container {
+        margin-top: 16px;
+        padding-left: 16px;
+        border-left: 2px solid var(--neon-yellow);
+    }
+    
+    .reply-item {
+        display: flex;
+        gap: 16px;
+        margin-top: 16px;
+    }
+    
+    .reply-avatar {
+        width: 40px;
+        height: 40px;
+    }
+    
+    /* Sidebar */
+    .sidebar-section {
+        margin-bottom: 32px;
+    }
+    
+    .sidebar-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--neon-yellow);
+    }
+    
+    .related-videos, .recommended-videos {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .video-thumbnail {
+        position: relative;
+        width: 168px;
+        height: 94px;
+        flex-shrink: 0;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #000;
+    }
+    
+    .thumbnail-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+    
+    .neon-card:hover .thumbnail-img {
+        transform: scale(1.05);
+    }
+    
+    .thumbnail-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--neon-yellow);
+        font-size: 24px;
+    }
+    
+    .video-duration {
+        position: absolute;
+        bottom: 4px;
+        right: 4px;
+        background: rgba(0,0,0,0.8);
+        color: var(--neon-yellow);
+        font-size: 12px;
+        padding: 2px 4px;
+        border-radius: 4px;
+    }
+    
+    .video-info {
+        flex: 1;
+    }
+    
+    .video-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 4px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    .video-author, .video-stats {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-bottom: 4px;
+    }
+    
+    .no-videos {
+        color: var(--text-muted);
+        text-align: center;
+        padding: 20px 0;
+    }
+    
+    /* Share Modal */
+    .share-options {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    
+    .share-link {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .btn-copy {
+        white-space: nowrap;
+    }
+    
+    /* Animations */
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 5px var(--neon-yellow-light);
+        }
+        50% {
+            box-shadow: 0 0 20px var(--neon-yellow-light);
+        }
+        100% {
+            box-shadow: 0 0 5px var(--neon-yellow-light);
+        }
+    }
+    
+    .pulse {
+        animation: pulse 2s infinite;
+    }
+</style>
+
+<script>
+    // Video Player Controls
+    document.addEventListener('DOMContentLoaded', function() {
+        const video = document.getElementById('main-video');
+        const playPauseBtn = document.querySelector('.play-pause-btn');
+        const progressBar = document.querySelector('.video-progress-bar');
+        const progressContainer = document.querySelector('.video-progress-container');
+        const timeDisplay = document.querySelector('.video-time-display');
+        const currentTimeDisplay = timeDisplay.querySelector('.current-time');
+        const durationDisplay = timeDisplay.querySelector('.duration');
+        const fullscreenBtn = document.querySelector('.fullscreen-btn');
+        
+        // Play/Pause toggle
+        playPauseBtn.addEventListener('click', function() {
+            if (video.paused) {
+                video.play();
+                this.innerHTML = '<i class="fas fa-pause"></i>';
+            } else {
+                video.pause();
+                this.innerHTML = '<i class="fas fa-play"></i>';
+            }
+        });
+        
+        // Update progress bar
+        video.addEventListener('timeupdate', function() {
+            const percent = (video.currentTime / video.duration) * 100;
+            progressBar.style.width = `${percent}%`;
+            
+            // Update time display
+            currentTimeDisplay.textContent = formatTime(video.currentTime);
+            durationDisplay.textContent = formatTime(video.duration);
+        });
+        
+        // Click on progress bar to seek
+        progressContainer.addEventListener('click', function(e) {
+            const pos = (e.pageX - this.offsetLeft) / this.offsetWidth;
+            video.currentTime = pos * video.duration;
+        });
+        
+        // Fullscreen toggle
+        fullscreenBtn.addEventListener('click', function() {
+            if (!document.fullscreenElement) {
+                video.requestFullscreen().catch(err => {
+                    console.error(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+        
+        // Format time as MM:SS
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+        
+        // Show duration when metadata is loaded
+        video.addEventListener('loadedmetadata', function() {
+            durationDisplay.textContent = formatTime(video.duration);
+        });
+        
+        // Reply button functionality
+        document.querySelectorAll('.btn-reply').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const commentId = this.getAttribute('data-comment-id');
+                document.getElementById(`reply-form-${commentId}`).style.display = 'block';
+            });
+        });
+        
+        // Cancel reply button functionality
+        document.querySelectorAll('.btn-cancel-reply').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const commentId = this.getAttribute('data-comment-id');
+                document.getElementById(`reply-form-${commentId}`).style.display = 'none';
+            });
+        });
+        
+        // Add pulse animation to video container
+        const videoContainer = document.querySelector('.video-player-container');
+        setInterval(() => {
+            videoContainer.classList.toggle('pulse');
+        }, 3000);
+    });
+    
+    // Copy share link
+    function copyShareLink() {
+        const shareLink = document.getElementById('shareLink');
+        shareLink.select();
+        shareLink.setSelectionRange(0, 99999);
+        document.execCommand('copy');
+        
+        // Show tooltip or notification
+        const copyBtn = document.querySelector('.btn-copy');
+        const originalText = copyBtn.innerHTML;
+        copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        copyBtn.classList.add('liked');
+        
+        setTimeout(() => {
+            copyBtn.innerHTML = originalText;
+            copyBtn.classList.remove('liked');
+        }, 2000);
+    }
+    
+    // Auto-play videos when they come into view (for sidebar videos)
+    document.addEventListener('DOMContentLoaded', function() {
+        const videos = document.querySelectorAll('.thumbnail-img');
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.play();
+                } else {
+                    entry.target.pause();
+                }
+            });
+        }, { threshold: 0.5 });
+        
+        videos.forEach(video => {
+            observer.observe(video);
+        });
+    });
+</script>
+{% endblock %}

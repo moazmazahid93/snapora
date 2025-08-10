@@ -1,0 +1,126 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>snapora - {% block title %}{% endblock %}</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(180deg, #fff9e6, #fff3cc);
+            color: #333;
+        }
+
+        /* Navbar Styling */
+        .navbar {
+            background: linear-gradient(90deg, #ffcd38, #ffb703);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .navbar a {
+            color: #333 !important;
+            font-weight: 500;
+        }
+        .navbar a:hover {
+            color: #000 !important;
+        }
+
+        /* Alerts */
+        .alert {
+            border-radius: 12px;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
+
+        /* Main container */
+        main.container {
+            background: #fffefa;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background-color: #ffb703;
+            border: none;
+            font-weight: 500;
+        }
+        .btn-primary:hover {
+            background-color: #ff9e00;
+        }
+
+        /* Footer */
+        footer {
+            background: linear-gradient(90deg, #ffcd38, #ffb703);
+            color: #333;
+            padding: 1.5rem 0;
+            margin-top: 3rem;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        /* Smooth animations */
+        .fade-in {
+            animation: fadeIn 0.8s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from {opacity: 0; transform: translateY(10px);}
+            to {opacity: 1; transform: translateY(0);}
+        }
+    </style>
+</head>
+<body>
+
+    {% include 'includes/navbar.html' %}
+    
+    <main class="container mt-4 animate__animated animate__fadeIn">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show fade-in" role="alert">
+                    <i class="fas 
+                        {% if message.tags == 'success' %}fa-check-circle 
+                        {% elif message.tags == 'error' %}fa-exclamation-circle 
+                        {% else %}fa-info-circle{% endif %} me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </main>
+    
+    {% include 'includes/footer.html' %}
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+    
+    <script>
+        // Smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>

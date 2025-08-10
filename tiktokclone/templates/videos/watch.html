@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ video.title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-body">
+                <video class="w-100" controls autoplay>
+                    <source src="{{ video.video_file.url }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div>
+                        <h4>{{ video.title }}</h4>
+                        <p class="text-muted">{{ video.views.count }} views • {{ video.created_at|timesince }} ago</p>
+                    </div>
+                    <div class="d-flex">
+                        <form action="{% url 'like_video' video.id %}" method="post" class="me-2">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-{% if user_like and user_like.is_like %}danger{% else %}outline-danger{% endif %}">
+                                <i class="fas fa-heart"></i> {{ video.like_count }}
+                            </button>
+                        </form>
+                        {% if request.user == video.user %}
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                <li><a class="dropdown-item" href="{% url 'edit' video.id %}">Edit</a></li>
+                                <li><a class="dropdown-item" href="{% url 'delete' video.id %}">Delete</a></li>
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="d-flex align-items-start mt-3">
+                    <a href="{% url 'profile' video.user.username %}">
+                        <img src="{{ video.user.profile_pic.url }}" alt="{{ video.user.username }}" class="rounded-circle me-2" width="50" height="50">
+                    </a>
+                    <div>
+                        <a href="{% url 'profile' video.user.username %}" class="text-decoration-none">
+                            <strong>{{ video.user.username }}</strong>
+                        </a>
+                        <p>{{ video.description }}</p>
+                        <div class="d-flex flex-wrap">
+                            {% for tag in video.tags.all %}
+                            <a href="{% url 'tag' tag.slug %}" class="badge bg-secondary me-1 mb-1 text-decoration-none">#{{ tag.name }}</a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>{{ video.comment_count }} Comments</h5>
+            </div>
+            <div class="card-body">
+                {% if request.user.is_authenticated %}
+                <form method="post" action="{% url 'add_comment' video.id %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <textarea class="form-control" name="text" rows="3" placeholder="Add a comment..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Post Comment</button>
+                </form>
+                {% else %}
+                <p class="text-center">
+                    <a href="{% url 'login' %}">Login</a> to leave a comment
+                </p>
+                {% endif %}
+                
+                <div class="mt-4">
+                    {% for comment in comments %}
+                    <div class="mb-3">
+                        <div class="d-flex">
+                            <a href="{% url 'profile' comment.user.username %}">
+                                <img src="{{ comment.user.profile_pic.url }}" alt="{{ comment.user.username }}" class="rounded-circle me-2" width="40" height="40">
+                            </a>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <a href="{% url 'profile' comment.user.username %}" class="text-decoration-none">
+                                            <strong>{{ comment.user.username }}</strong>
+                                        </a>
+                                        <p class="mb-1">{{ comment.text }}</p>
+                                        <small class="text-muted">{{ comment.created_at|timesince }} ago</small>
+                                    </div>
+                                    {% if request.user == comment.user %}
+                                    <form method="post" action="{% url 'delete_comment' comment.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if request.user.is_authenticated %}
+                                <button class="btn btn-sm btn-outline-secondary mt-2" onclick="document.getElementById('reply-{{ comment.id }}').style.display='block'">
+                                    Reply
+                                </button>
+                                <form id="reply-{{ comment.id }}" method="post" action="{% url 'add_comment' video.id %}" style="display: none;" class="mt-2">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="parent_id" value="{{ comment.id }}">
+                                    <div class="mb-2">
+                                        <textarea class="form-control" name="text" rows="2" placeholder="Write a reply..."></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-sm btn-primary">Post Reply</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('reply-{{ comment.id }}').style.display='none'">Cancel</button>
+                                </form>
+                                {% endif %}
+                                
+                                {% for reply in comment.replies.all %}
+                                <div class="ms-4 mt-3">
+                                    <div class="d-flex">
+                                        <a href="{% url 'profile' reply.user.username %}">
+                                            <img src="{{ reply.user.profile_pic.url }}" alt="{{ reply.user.username }}" class="rounded-circle me-2" width="30" height="30">
+                                        </a>
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <a href="{% url 'profile' reply.user.username %}" class="text-decoration-none">
+                                                        <strong>{{ reply.user.username }}</strong>
+                                                    </a>
+                                                    <p class="mb-1">{{ reply.text }}</p>
+                                                    <small class="text-muted">{{ reply.created_at|timesince }} ago</small>
+                                                </div>
+                                                {% if request.user == reply.user %}
+                                                <form method="post" action="{% url 'delete_comment' reply.id %}">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                                </form>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-center text-muted">No comments yet</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>More from {{ video.user.username }}</h5>
+            </div>
+            <div class="card-body">
+                {% for related_video in video.user.videos.exclude(id=video.id).order_by('-created_at')|slice:":5" %}
+                <div class="mb-3">
+                    <a href="{% url 'watch' related_video.id %}">
+                        <div class="d-flex">
+                            <video class="flex-shrink-0 me-2" width="120" height="80" poster="{{ related_video.thumbnail.url }}" muted>
+                                <source src="{{ related_video.video_file.url }}" type="video/mp4">
+                            </video>
+                            <div>
+                                <h6 class="mb-1">{{ related_video.title|truncatechars:30 }}</h6>
+                                <small class="text-muted">{{ related_video.views.count }} views</small>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                {% empty %}
+                <p class="text-muted">No other videos from this user</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Auto-play videos when they come into view
+document.addEventListener('DOMContentLoaded', function() {
+    const videos = document.querySelectorAll('video');
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.play();
+            } else {
+                entry.target.pause();
+            }
+        });
+    }, { threshold: 0.5 });
+    
+    videos.forEach(video => {
+        observer.observe(video);
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,154 @@
+<nav class="navbar navbar-expand-lg navbar-dark shadow-sm fixed-top" style="background-color: #1A202C;">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center animate__animated animate__fadeInLeft" href="{% url 'core:home' %}">
+            <i class="fas fa-play-circle me-2" style="color: #ffffff;"></i>
+            <span class="fw-bold" style="color: #ffffff;">snapora</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-expanded="false">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item animate__animated animate__fadeInDown">
+                    <a class="nav-link" href="{% url 'core:home' %}" style="color: #EDF2F7;">
+                        <i class="fas fa-home me-1" style="color: #ffffff;"></i> Home
+                    </a>
+                </li>
+                {% if request.user.is_authenticated %}
+                <li class="nav-item animate__animated animate__fadeInDown">
+                    <a class="nav-link" href="{% url 'videos:upload' %}" style="color: #EDF2F7;">
+                        <i class="fas fa-upload me-1" style="color: #FFD700;"></i> Upload
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+            
+            <form class="d-flex me-3 animate__animated animate__fadeInDown" action="{% url 'videos:search' %}" method="GET">
+                <div class="input-group">
+                    <input class="form-control border-end-0" type="search" name="q" placeholder="Search videos..." aria-label="Search" style="background-color: #2D3748; color: #EDF2F7; border-color: #4A5568;">
+                    <button class="btn" type="submit" style="background-color: #FFD700; color: #1A202C;">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </form>
+            
+            <ul class="navbar-nav">
+                {% if request.user.is_authenticated %}
+                <li class="nav-item dropdown animate__animated animate__fadeInRight">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" style="color: #EDF2F7;">
+                        {% if request.user.profile_pic %}
+                            <img src="{{ request.user.profile_pic.url }}" alt="Profile" class="rounded-circle me-2" width="32" height="32" style="border: 2px solid #FFD700;">
+                        {% else %}
+                            <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width:32px; height:32px; background-color: #FFD700;">
+                                <span class="fw-bold" style="color: #1A202C;">{{ request.user.username|first|upper }}</span>
+                            </div>
+                        {% endif %}
+                        <span class="d-none d-lg-inline">{{ request.user.username }}</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow animate__animated animate__fadeIn" style="background-color: #fcfcfc; border-color: #4A5568;">
+                        <li><a class="dropdown-item" href="{% url 'users:profile' request.user.username %}" style="color: #EDF2F7;">
+                            <i class="fas fa-user-circle me-2" style="color: #FFD700;"></i>Profile
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'users:edit_profile' %}" style="color: #EDF2F7;">
+                            <i class="fas fa-cog me-2" style="color: #FFD700;"></i>Settings
+                        </a></li>
+                        
+                        <li><hr class="dropdown-divider" style="border-color: #4A5568;"></li>
+                        <li><a class="dropdown-item text-danger" href="{% url 'users:logout' %}">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a></li>
+                    </ul>
+                </li>
+                {% else %}
+                <li class="nav-item animate__animated animate__fadeInRight">
+                    <a class="nav-link btn me-2" href="{% url 'users:login' %}" style="background-color: transparent; border: 1px solid #FFD700; color: #FFD700;">
+                        <i class="fas fa-sign-in-alt me-1"></i> Login
+                    </a>
+                </li>
+                <li class="nav-item animate__animated animate__fadeInRight">
+                    <a class="nav-link btn" href="{% url 'users:signup' %}" style="background-color: #FFD700; color: #1A202C;">
+                        <i class="fas fa-user-plus me-1"></i> Sign Up
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<style>
+    /* Navbar styling */
+    .navbar {
+        transition: all 0.3s ease;
+        background-color: #1A202C;
+        border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+    }
+    
+    .navbar.scrolled {
+        background-color: rgba(26, 32, 44, 0.95);
+        backdrop-filter: blur(10px);
+    }
+    
+    .nav-link {
+        transition: all 0.2s ease;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+    }
+    
+    .nav-link:hover {
+        color: #FFD700 !important;
+        background-color: rgba(255, 215, 0, 0.1);
+    }
+    
+    .dropdown-item {
+        transition: all 0.2s ease;
+    }
+    
+    .dropdown-item:hover {
+        background-color: rgba(255, 215, 0, 0.1) !important;
+        color: #FFD700 !important;
+    }
+    
+    /* Search bar styling */
+    .form-control:focus {
+        border-color: #FFD700;
+        box-shadow: 0 0 0 0.25rem rgba(255, 215, 0, 0.25);
+        background-color: #2D3748;
+        color: #EDF2F7;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 992px) {
+        .navbar-collapse {
+            padding: 1rem 0;
+        }
+        
+        .nav-item {
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-control {
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+
+<script>
+    // Add scroll effect to navbar
+    window.addEventListener('scroll', function() {
+        const navbar = document.querySelector('.navbar');
+        if (window.scrollY > 50) {
+            navbar.classList.add('scrolled');
+        } else {
+            navbar.classList.remove('scrolled');
+        }
+    });
+    
+    // Initialize tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
