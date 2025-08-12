@@ -67,7 +67,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'snapora.config.wsgi.application'
+WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database configuration from environment variables
 DATABASES = {
