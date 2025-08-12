@@ -28,19 +28,17 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Optional: Run tests here if you want
-      # - name: Run tests
-      #   run: |
-      #     source venv/bin/activate
-      #     python manage.py test
+      # Prepare a clean deploy folder without venv and .git
+      - name: Prepare artifact folder
+        run: |
+          mkdir deploy
+          rsync -av --progress ./ deploy --exclude venv --exclude .git
 
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          path: |
-            .  # Upload everything except venv
-            !venv
+          path: ./deploy
 
   deploy:
     runs-on: ubuntu-latest
@@ -66,4 +64,4 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'snapora-web-21722'
-          package: './'  # deploy root of downloaded artifact
+          package: './deploy'
