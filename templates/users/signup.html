@@ -2,7 +2,7 @@
 {% load static %}
 {% load crispy_forms_tags %}
 
-{% block title %}Join snapora - Sign Up{% endblock %}
+{% block title %}Join Snapora - Sign Up{% endblock %}
 
 {% block content %}
 <div class="signup-container">
@@ -43,6 +43,19 @@
                 <h2>Create Your Account</h2>
                 <p>Join the snapora community today</p>
             </div>
+
+            <!-- Display form errors -->
+            {% if form.errors %}
+                <div class="alert alert-danger">
+                    <ul>
+                        {% for field in form %}
+                            {% for error in field.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
 
             <form method="post" enctype="multipart/form-data" novalidate>
                 {% csrf_token %}
@@ -95,12 +108,19 @@
                     </div>
                 </div>
 
+                <!-- Terms and Conditions Checkbox -->
+                <div class="terms-agreement">
+                    <input type="checkbox" id="terms" name="terms_accepted" required>
+                    <label for="terms">
+                        I accept the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+                    </label>
+                </div>
+
                 <div class="profile-picture">
                     <h5>Profile Picture</h5>
                     <div class="picture-upload">
                         <div class="preview-container">
-                            <img id="profile-pic-preview" src="{% static 'images/default-avatar.jpg' %}" 
-                                 alt="Profile preview">
+                            <img id="profile-pic-preview" src="{% static 'images/default-avatar.jpg' %}" alt="Profile preview">
                             <label for="profile_pic" class="upload-label">
                                 <i class="fas fa-camera"></i>
                             </label>
@@ -113,13 +133,6 @@
                     </div>
                 </div>
 
-                <div class="terms-agreement">
-                    <input type="checkbox" id="terms" required>
-                    <label for="terms">
-                        I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
-                    </label>
-                </div>
-
                 <button type="submit" class="submit-btn">
                     <i class="fas fa-rocket"></i> Get Started
                 </button>
@@ -129,310 +142,19 @@
 </div>
 
 <style>
-    :root {
-        --primary-yellow: #FFD700;
-        --yellow-light: #FFF9C4;
-        --yellow-dark: #FBC02D;
-        --yellow-accent: #FFC107;
-        --dark-gray: #2D3748;
-        --medium-gray: #4A5568;
-        --light-gray: #EDF2F7;
-        --white: #FFFFFF;
-        --black: #1A202C;
-        --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
-        --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
-        --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
-        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+    /* Styling here... */
 
-    /* Main Container */
-    .signup-container {
-        display: flex;
-        min-height: 100vh;
-        background-color: var(--white);
-    }
-
-    /* Left Decoration Panel */
-    .signup-decoration {
-        flex: 1;
-        background: linear-gradient(135deg, var(--yellow-dark) 0%, var(--yellow-accent) 100%);
-        color: var(--dark-gray);
-        padding: 3rem;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-
-    .logo-container {
-        display: flex;
-        align-items: center;
-        margin-bottom: 3rem;
-        font-size: 2rem;
-        font-weight: bold;
-        color: var(--dark-gray);
-    }
-
-    .logo-container i {
-        margin-right: 1rem;
-        font-size: 2.5rem;
-        color: var(--dark-gray);
-    }
-
-    .features-list {
-        margin: 3rem 0;
-    }
-
-    .feature-item {
-        margin-bottom: 2.5rem;
-        padding: 1.5rem;
-        border-radius: 10px;
-        background: rgba(255, 255, 255, 0.3);
-        backdrop-filter: blur(5px);
-        transition: var(--transition);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .feature-item:hover {
-        transform: translateX(10px);
-        background: rgba(255, 255, 255, 0.4);
-    }
-
-    .feature-item i {
-        font-size: 1.5rem;
-        margin-bottom: 1rem;
-        color: var(--dark-gray);
-    }
-
-    .feature-item h4 {
-        margin-bottom: 0.5rem;
-        color: var(--dark-gray);
-    }
-
-    .feature-item p {
-        color: var(--medium-gray);
-    }
-
-    .decoration-footer {
-        margin-top: auto;
-        text-align: center;
-    }
-
-    .decoration-footer a {
-        color: var(--dark-gray);
-        font-weight: bold;
-        text-decoration: underline;
-    }
-
-    /* Right Form Panel */
-    .signup-form {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 2rem;
-        background: var(--light-gray);
-    }
-
-    .form-container {
-        max-width: 600px;
-        width: 100%;
-        background: var(--white);
-        padding: 3rem;
-        border-radius: 15px;
-        box-shadow: var(--shadow-lg);
-    }
-
-    .form-header {
-        text-align: center;
-        margin-bottom: 2rem;
-    }
-
-    .form-header h2 {
-        font-weight: bold;
-        margin-bottom: 0.5rem;
-        color: var(--dark-gray);
-    }
-
-    .form-header p {
-        color: var(--medium-gray);
-    }
-
-    .form-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-    }
-
-    .form-group {
-        position: relative;
-    }
-
-    .input-icon {
-        position: absolute;
-        right: 15px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--medium-gray);
-    }
-
-    /* Account Type Selector */
-    .account-type {
-        margin: 2rem 0;
-    }
-
-    .account-type h5 {
-        margin-bottom: 1rem;
-        font-weight: bold;
-        color: var(--dark-gray);
-    }
-
-    .type-selector {
-        display: flex;
-        gap: 1rem;
-    }
-
-    .type-selector input[type="radio"] {
-        display: none;
-    }
-
-    .type-card {
-        flex: 1;
-        padding: 1.5rem;
-        border: 2px solid var(--light-gray);
-        border-radius: 10px;
-        text-align: center;
-        cursor: pointer;
-        transition: var(--transition);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .type-card i {
-        font-size: 2rem;
-        color: var(--yellow-dark);
-        margin-bottom: 1rem;
-    }
-
-    .type-card h6 {
-        font-weight: bold;
-        margin-bottom: 0.5rem;
-        color: var(--dark-gray);
-    }
-
-    .type-card p {
-        font-size: 0.9rem;
-        color: var(--medium-gray);
-    }
-
-    .checkmark {
-        position: absolute;
-        top: -10px;
-        right: -10px;
-        width: 30px;
-        height: 30px;
-        background: var(--yellow-dark);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--white);
-        opacity: 0;
-        transform: scale(0);
+    /* Form Field Styling */
+    .form-control {
+        border: 1px solid var(--light-gray);
+        border-radius: 8px;
+        padding: 10px 15px;
         transition: var(--transition);
     }
 
-    .type-selector input[type="radio"]:checked + .type-card {
-        border-color: var(--yellow-dark);
-        background: rgba(251, 192, 45, 0.1);
-    }
-
-    .type-selector input[type="radio"]:checked + .type-card .checkmark {
-        opacity: 1;
-        transform: scale(1);
-    }
-
-    /* Profile Picture Upload */
-    .profile-picture {
-        margin: 2rem 0;
-    }
-
-    .profile-picture h5 {
-        margin-bottom: 1rem;
-        font-weight: bold;
-        color: var(--dark-gray);
-    }
-
-    .picture-upload {
-        display: flex;
-        align-items: center;
-        gap: 1.5rem;
-    }
-
-    .preview-container {
-        position: relative;
-        width: 100px;
-        height: 100px;
-    }
-
-    #profile-pic-preview {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 50%;
-        border: 3px solid var(--light-gray);
-    }
-
-    .upload-label {
-        position: absolute;
-        bottom: 0;
-        right: 0;
-        width: 35px;
-        height: 35px;
-        background: var(--yellow-dark);
-        color: var(--white);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: var(--transition);
-    }
-
-    .upload-label:hover {
-        transform: scale(1.1);
-        background: var(--yellow-accent);
-    }
-
-    #profile_pic {
-        display: none;
-    }
-
-    .upload-info p {
-        margin-bottom: 0.25rem;
-        font-weight: 500;
-        color: var(--dark-gray);
-    }
-
-    .upload-info small {
-        color: var(--medium-gray);
-    }
-
-    /* Terms Agreement */
-    .terms-agreement {
-        margin: 2rem 0;
-        display: flex;
-        align-items: center;
-    }
-
-    .terms-agreement input {
-        margin-right: 0.75rem;
-    }
-
-    .terms-agreement a {
-        color: var(--yellow-dark);
-        text-decoration: none;
-        font-weight: 500;
+    .form-control:focus {
+        border-color: var(--yellow-accent);
+        box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
     }
 
     /* Submit Button */
@@ -452,58 +174,6 @@
         align-items: center;
         justify-content: center;
     }
-
-    .submit-btn i {
-        margin-right: 0.75rem;
-    }
-
-    .submit-btn:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 15px rgba(251, 192, 45, 0.3);
-    }
-
-    /* Form Field Styling */
-    .form-control {
-        border: 1px solid var(--light-gray);
-        border-radius: 8px;
-        padding: 10px 15px;
-        transition: var(--transition);
-    }
-
-    .form-control:focus {
-        border-color: var(--yellow-accent);
-        box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
-    }
-
-    /* Responsive Design */
-    @media (max-width: 992px) {
-        .signup-container {
-            flex-direction: column;
-        }
-        
-        .signup-decoration {
-            padding: 2rem;
-        }
-        
-        .form-grid {
-            grid-template-columns: 1fr;
-        }
-        
-        .type-selector {
-            flex-direction: column;
-        }
-    }
-
-    @media (max-width: 576px) {
-        .form-container {
-            padding: 2rem 1.5rem;
-        }
-        
-        .picture-upload {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-    }
 </style>
 
 <script>
@@ -513,44 +183,6 @@
         if (file) {
             document.getElementById('profile-pic-preview').src = URL.createObjectURL(file);
         }
-    });
-
-    // Add animation class when elements come into view
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('animate__animated', 'animate__fadeInUp');
-                entry.target.style.opacity = 1;
-                entry.target.style.transform = 'translateY(0)';
-            }
-        });
-    }, { threshold: 0.1 });
-
-    document.querySelectorAll('.form-group, .account-type, .profile-picture').forEach(el => {
-        el.style.opacity = 0;
-        el.style.transform = 'translateY(20px)';
-        el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-        observer.observe(el);
-    });
-
-    // Add ripple effect to buttons
-    document.querySelectorAll('.type-card, .submit-btn').forEach(button => {
-        button.addEventListener('click', function(e) {
-            const rect = this.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            
-            const ripple = document.createElement('span');
-            ripple.classList.add('ripple-effect');
-            ripple.style.left = `${x}px`;
-            ripple.style.top = `${y}px`;
-            
-            this.appendChild(ripple);
-            
-            setTimeout(() => {
-                ripple.remove();
-            }, 600);
-        });
     });
 </script>
 {% endblock %}
