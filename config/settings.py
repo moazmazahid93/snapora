@@ -13,6 +13,9 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'change-me-in-production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
+CSRF_TRUSTED_ORIGINS = [
+    'https://snapora-web-21722.azurewebsites.net',
+]
 
 # Allow only specific hosts in production
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
