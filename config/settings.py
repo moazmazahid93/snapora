@@ -74,7 +74,7 @@ DATABASES = {
   'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',
-        'USER': 'pgadmin@snapora-db-19339',
+        'USER': 'pgadmin',
         'PASSWORD': 'Nine112233',
         'HOST': 'snapora-db-19339.postgres.database.azure.com',
         'PORT': '5432',
