@@ -25,15 +25,11 @@ def upload_video(request):
                 video = form.save(commit=False)
                 video.user = request.user
                 
-                # Handle Azure Blob Storage file upload
+                # Validate file size
                 video_file = request.FILES.get('video_file')
-                if video_file:
-                    # Azure Storage will handle the file automatically via django-storages
-                    video.video_file = video_file
-                
-                thumbnail = request.FILES.get('thumbnail')
-                if thumbnail:
-                    video.thumbnail = thumbnail
+                if video_file and video_file.size > 500 * 1024 * 1024:
+                    messages.error(request, 'File size exceeds 500MB limit')
+                    return render(request, 'videos/upload.html', {'form': form})
                 
                 video.save()
                 form.save_m2m()
@@ -55,9 +51,16 @@ def upload_video(request):
                 return redirect('videos:watch', video_id=video.id)
                 
             except Exception as e:
-                logger.error(f"Error uploading video: {e}")
-                messages.error(request, 'An error occurred while uploading the video. Please try again.')
+                logger.error(f"Error uploading video: {str(e)}")
+                # More specific error messages
+                if "permission" in str(e).lower():
+                    messages.error(request, 'Azure Storage permission denied. Check your credentials.')
+                elif "connection" in str(e).lower():
+                    messages.error(request, 'Could not connect to Azure Storage. Check network connection.')
+                else:
+                    messages.error(request, f'An error occurred while uploading the video: {str(e)}')
         else:
+            logger.error(f"Form validation errors: {form.errors}")
             messages.error(request, 'Please correct the errors below.')
     else:
         form = VideoUploadForm()
