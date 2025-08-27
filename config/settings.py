@@ -112,8 +112,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Azure Blob Storage Configuration for Media Files
-AZURE_ACCOUNT_NAME = os.getenv('AZURE_ACCOUNT_NAME', 'your_storage_account_name')
-AZURE_ACCOUNT_KEY = os.getenv('AZURE_ACCOUNT_KEY', 'your_account_key')
+AZURE_ACCOUNT_NAME = os.getenv('AZURE_ACCOUNT_NAME', 'snaporavideos')
+AZURE_ACCOUNT_KEY = os.getenv('AZURE_ACCOUNT_KEY', 'Fult+T9PAJcQbWU9a/0vuO33Haa3Y/xtGPSjN9FgJYGOYxoSXoOKjkwg8oRsjwFwVEeXM6emNqyC+AStqRlyMg==')
 AZURE_CONTAINER = os.getenv('AZURE_CONTAINER', 'media')
 AZURE_CUSTOM_DOMAIN = f'{AZURE_ACCOUNT_NAME}.blob.core.windows.net'
 
