@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from azure.identity import DefaultAzureCredential
 
 # Load environment variables from .env file
 load_dotenv()
@@ -33,6 +34,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'crispy_bootstrap5',
     'django_extensions',
+    'storages',  # Azure Storage support
 
     # Local apps
     'core.apps.CoreConfig',
@@ -47,7 +49,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.auth.middleware.AuthMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -74,13 +76,13 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database configuration from environment variables
 DATABASES = {
-  'default': {
+    'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'pgadmin',
-        'PASSWORD': 'Nine112233',
-        'HOST': 'snapora-db-19339.postgres.database.azure.com',
-        'PORT': '5432',
+        'NAME': os.getenv('DB_NAME', 'postgres'),
+        'USER': os.getenv('DB_USER', 'pgadmin'),
+        'PASSWORD': os.getenv('DB_PASSWORD', 'Nine112233'),
+        'HOST': os.getenv('DB_HOST', 'snapora-db-19339.postgres.database.azure.com'),
+        'PORT': os.getenv('DB_PORT', '5432'),
         'OPTIONS': {
             'sslmode': 'require'
         }
@@ -109,9 +111,26 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Whitenoise static file storage
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Media files
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# Azure Blob Storage Configuration for Media Files
+AZURE_ACCOUNT_NAME = os.getenv('AZURE_ACCOUNT_NAME', 'your_storage_account_name')
+AZURE_ACCOUNT_KEY = os.getenv('AZURE_ACCOUNT_KEY', 'your_account_key')
+AZURE_CONTAINER = os.getenv('AZURE_CONTAINER', 'media')
+AZURE_CUSTOM_DOMAIN = f'{AZURE_ACCOUNT_NAME}.blob.core.windows.net'
+
+# Configure Azure Storage as default file storage
+DEFAULT_FILE_STORAGE = 'storages.backends.azure_storage.AzureStorage'
+AZURE_LOCATION = ''  # Optional subfolder within container
+AZURE_SSL = True
+AZURE_URL_EXPIRATION_SECS = 3600  # 1 hour URL expiration
+
+# Media files configuration for Azure
+MEDIA_URL = f'https://{AZURE_CUSTOM_DOMAIN}/{AZURE_CONTAINER}/'
+MEDIA_ROOT = ''  # Not used when using Azure Storage
+
+# Optional: Use Azure for static files as well (uncomment below)
+# STATICFILES_STORAGE = 'storages.backends.azure_storage.AzureStorage'
+# AZURE_STATIC_CONTAINER = os.getenv('AZURE_STATIC_CONTAINER', 'static')
+# STATIC_URL = f'https://{AZURE_CUSTOM_DOMAIN}/{AZURE_STATIC_CONTAINER}/'
 
 # Custom user model
 AUTH_USER_MODEL = 'users.CustomUser'
@@ -129,3 +148,12 @@ CRISPY_TEMPLATE_PACK = 'bootstrap5'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SESSION_COOKIE_AGE = 3600
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# Security settings for production
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
