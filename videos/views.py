@@ -88,14 +88,13 @@ def watch_video(request, video_id):
         if request.user.is_authenticated:
             View.objects.get_or_create(
                 user=request.user,
-                video=video,
-                defaults={'viewed_at': timezone.now()}
+                video=video
             )
         else:
             # Track anonymous views using session
             viewed_videos = request.session.get('viewed_videos', [])
             if video_id not in viewed_videos:
-                View.objects.create(user=None, video=video, viewed_at=timezone.now())
+                View.objects.create(user=None, video=video)
                 viewed_videos.append(video_id)
                 request.session['viewed_videos'] = viewed_videos
 
@@ -325,8 +324,7 @@ def increment_view_count(request, video_id):
         if can_view_video(request.user, video):
             View.objects.get_or_create(
                 user=request.user,
-                video=video,
-                defaults={'viewed_at': timezone.now()}
+                video=video
             )
             return JsonResponse({'success': True, 'views': video.views.count()})
         return JsonResponse({'success': False, 'error': 'Permission denied'})
