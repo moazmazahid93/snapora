@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils.text import slugify
 import uuid
+import os
 
 User = get_user_model()
 
@@ -20,8 +21,21 @@ class Tag(models.Model):
 class Video(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='videos')
-    video_file = models.FileField(upload_to='videos/')
-    thumbnail = models.ImageField(upload_to='thumbnails/', blank=True, null=True)
+    
+    # Increased max_length to 200
+    video_file = models.FileField(
+        upload_to='videos/', 
+        max_length=200  # Increased from default 100
+    )
+    
+    # Also increased max_length for thumbnail
+    thumbnail = models.ImageField(
+        upload_to='thumbnails/', 
+        blank=True, 
+        null=True,
+        max_length=200  # Added max_length
+    )
+    
     title = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
