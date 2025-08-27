@@ -1,13 +1,37 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="auto">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="snapora - Share and discover amazing videos">
+    <meta name="keywords" content="videos, social media, sharing, community">
+    <meta name="author" content="snapora Team">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="snapora - {% block og_title %}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Share and discover amazing videos{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}{% static 'images/logo.png' %}{% endblock %}">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:type" content="website">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="snapora - {% block twitter_title %}{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Share and discover amazing videos{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}{% static 'images/logo.png' %}{% endblock %}">
+
     <title>snapora - {% block title %}{% endblock %}</title>
 
+    <!-- Favicon -->
+    <link rel="icon" href="{% static 'images/favicon.ico' %}" type="image/x-icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/favicon-16x16.png' %}">
+
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -16,73 +40,231 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+
+    <!-- Theme Color for Mobile Browsers -->
+    <meta name="theme-color" content="#ffb703">
+    <meta name="msapplication-TileColor" content="#ffb703">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "snapora",
+        "url": "https://snapora-web-21722.azurewebsites.net/",
+        "description": "Share and discover amazing videos",
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": "{% url 'videos:search' %}?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+        }
+    }
+    </script>
+
     <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #ffcd38 0%, #ffb703 100%);
+            --secondary-gradient: linear-gradient(135deg, #fff9e6 0%, #fff3cc 100%);
+            --dark-bg: #1a1a1a;
+            --dark-card: #2d2d2d;
+            --dark-text: #ffffff;
+            --dark-border: #404040;
+        }
+
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(180deg, #fff9e6, #fff3cc);
+            background: var(--secondary-gradient);
             color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        body[data-bs-theme="dark"] {
+            background: linear-gradient(180deg, #2d2d2d 0%, #1a1a1a 100%);
+            color: var(--dark-text);
         }
 
         /* Navbar Styling */
         .navbar {
-            background: linear-gradient(90deg, #ffcd38, #ffb703);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        .navbar a {
-            color: #333 !important;
-            font-weight: 500;
-        }
-        .navbar a:hover {
-            color: #000 !important;
+            background: var(--primary-gradient);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
         }
 
-        /* Alerts */
-        .alert {
-            border-radius: 12px;
-            font-size: 0.95rem;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        .navbar-brand {
+            font-weight: 800;
+            font-size: 1.8rem;
+            letter-spacing: -0.5px;
+        }
+
+        .navbar-nav .nav-link {
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-nav .nav-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
         }
 
         /* Main container */
         main.container {
-            background: #fffefa;
-            padding: 2rem;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            background: rgba(255, 254, 250, 0.95);
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+            flex: 1;
+        }
+
+        body[data-bs-theme="dark"] main.container {
+            background: rgba(45, 45, 45, 0.95);
+            border: 1px solid var(--dark-border);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        /* Alerts */
+        .alert {
+            border-radius: 15px;
+            font-size: 0.95rem;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            border: none;
+            backdrop-filter: blur(10px);
         }
 
         /* Buttons */
         .btn-primary {
-            background-color: #ffb703;
+            background: var(--primary-gradient);
             border: none;
-            font-weight: 500;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 179, 3, 0.3);
         }
+
         .btn-primary:hover {
-            background-color: #ff9e00;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 179, 3, 0.4);
+            background: linear-gradient(135deg, #ffd54f 0%, #ffc107 100%);
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
         }
 
         /* Footer */
         footer {
-            background: linear-gradient(90deg, #ffcd38, #ffb703);
+            background: var(--primary-gradient);
             color: #333;
-            padding: 1.5rem 0;
-            margin-top: 3rem;
+            padding: 2rem 0;
+            margin-top: auto;
             text-align: center;
             font-size: 0.9rem;
         }
 
+        body[data-bs-theme="dark"] footer {
+            background: linear-gradient(90deg, #3a3a3a 0%, #2d2d2d 100%);
+            color: var(--dark-text);
+        }
+
         /* Smooth animations */
         .fade-in {
-            animation: fadeIn 0.8s ease-in-out;
+            animation: fadeIn 0.6s ease-out;
         }
+
         @keyframes fadeIn {
-            from {opacity: 0; transform: translateY(10px);}
-            to {opacity: 1; transform: translateY(0);}
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Loading animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            main.container {
+                padding: 1.5rem;
+                margin: 1rem;
+                border-radius: 15px;
+            }
+            
+            .navbar-brand {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            main.container {
+                padding: 1rem;
+                margin: 0.5rem;
+            }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-gradient);
+            border-radius: 4px;
+        }
+
+        body[data-bs-theme="dark"] ::-webkit-scrollbar-track {
+            background: #2d2d2d;
+        }
+
+        body[data-bs-theme="dark"] ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #666 0%, #555 100%);
         }
     </style>
+
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
 
@@ -94,7 +276,8 @@
                 <div class="alert alert-{{ message.tags }} alert-dismissible fade show fade-in" role="alert">
                     <i class="fas 
                         {% if message.tags == 'success' %}fa-check-circle 
-                        {% elif message.tags == 'error' %}fa-exclamation-circle 
+                        {% elif message.tags == 'error' %}fa-exclamation-triangle
+                        {% elif message.tags == 'warning' %}fa-exclamation-circle
                         {% else %}fa-info-circle{% endif %} me-2"></i>
                     {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -102,25 +285,117 @@
             {% endfor %}
         {% endif %}
         
+        {% block breadcrumb %}
+        {% if breadcrumb %}
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                {% for item in breadcrumb %}
+                <li class="breadcrumb-item {% if forloop.last %}active{% endif %}">
+                    {% if item.url %}<a href="{{ item.url }}">{% endif %}
+                    {{ item.name }}
+                    {% if item.url %}</a>{% endif %}
+                </li>
+                {% endfor %}
+            </ol>
+        </nav>
+        {% endif %}
+        {% endblock %}
+        
         {% block content %}{% endblock %}
     </main>
     
     {% include 'includes/footer.html' %}
     
     <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    {% block scripts %}{% endblock %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     
+    <!-- Custom JS -->
+    <script src="{% static 'js/main.js' %}"></script>
+
     <script>
+        // Theme toggle functionality
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-bs-theme', theme);
+            localStorage.setItem('theme', theme);
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+        }
+
+        // Initialize theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        setTheme(savedTheme);
+
         // Smooth scrolling
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
-                });
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
             });
         });
+
+        // Lazy loading for images
+        if ('IntersectionObserver' in window) {
+            const lazyImages = document.querySelectorAll('img.lazy-load');
+            const imageObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        img.src = img.dataset.src;
+                        img.classList.remove('lazy-load');
+                        imageObserver.unobserve(img);
+                    }
+                });
+            });
+
+            lazyImages.forEach(img => imageObserver.observe(img));
+        }
+
+        // AJAX CSRF token setup
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const csrftoken = getCookie('csrftoken');
+
+        // Global error handling
+        window.addEventListener('error', function(e) {
+            console.error('Global error:', e.error);
+        });
+
+        // Service Worker Registration (if needed)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('{% static "js/sw.js" %}')
+                .then(function(registration) {
+                    console.log('SW registered: ', registration);
+                })
+                .catch(function(registrationError) {
+                    console.log('SW registration failed: ', registrationError);
+                });
+        }
     </script>
+    
+    {% block scripts %}{% endblock %}
+    
 </body>
 </html>
