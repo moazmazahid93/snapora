@@ -31,10 +31,14 @@ def upload_video(request):
                     messages.error(request, 'File size exceeds 500MB limit')
                     return render(request, 'videos/upload.html', {'form': form})
                 
+                # Let Django-storages handle the file upload to Azure
+                # Just save the model and the files will be uploaded automatically
                 video.save()
+                
+                # Handle tags using the form's save_m2m() method
                 form.save_m2m()
                 
-                # Handle tags
+                # Process tags manually if needed
                 tags_input = form.cleaned_data.get('tags', '')
                 if tags_input:
                     tag_names = [tag.strip() for tag in tags_input.split(',') if tag.strip()]
@@ -65,9 +69,7 @@ def upload_video(request):
     else:
         form = VideoUploadForm()
     
-    return render(request, 'videos/upload.html', {'form': form})
-
-def watch_video(request, video_id):
+    return render(request, 'videos/upload.html', {'form': form})def watch_video(request, video_id):
     try:
         video = get_object_or_404(
             Video.objects.select_related('user')
