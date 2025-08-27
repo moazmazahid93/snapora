@@ -69,7 +69,10 @@ def upload_video(request):
     else:
         form = VideoUploadForm()
     
-    return render(request, 'videos/upload.html', {'form': form})def watch_video(request, video_id):
+    return render(request, 'videos/upload.html', {'form': form})
+
+# ADDED THE MISSING FUNCTION DEFINITION LINE HERE
+def watch_video(request, video_id):
     try:
         video = get_object_or_404(
             Video.objects.select_related('user')
