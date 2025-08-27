@@ -8,3 +8,6 @@ crispy-bootstrap5
 django-extensions
 whitenoise
 pillow
+azure-storage-blob 
+django-storages 
+azure-identity
