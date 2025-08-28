@@ -497,247 +497,235 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const dropArea = document.getElementById('drop-area');
-        const fileInput = document.getElementById('id_video_file');
-        const videoPreview = document.getElementById('video-preview');
-        const previewPlayer = document.getElementById('preview-player');
-        const previewPlaceholder = videoPreview.querySelector('.preview-placeholder');
-        const progressContainer = document.getElementById('progress-container');
-        const progressBar = document.getElementById('upload-progress');
-        const progressText = document.getElementById('progress-text');
-        const submitBtn = document.getElementById('submit-btn');
-        const uploadForm = document.getElementById('upload-form');
-        
-        // Add pulse animation to upload card
-        const uploadCard = document.querySelector('.upload-card');
-        setInterval(() => {
-            uploadCard.classList.toggle('pulse');
-        }, 3000);
-        
-        // Prevent default drag behaviors
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, preventDefaults, false);
-        });
-        
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-        
-        // Highlight drop area when item is dragged over it
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropArea.addEventListener(eventName, highlight, false);
-        });
-        
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, unhighlight, false);
-        });
-        
-        function highlight() {
-            dropArea.classList.add('highlight');
-        }
-        
-        function unhighlight() {
-            dropArea.classList.remove('highlight');
-        }
-        
-        // Handle dropped files
-        dropArea.addEventListener('drop', handleDrop, false);
-        
-        function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            handleFiles(files);
-        }
-        
-        // Handle selected files
-        fileInput.addEventListener('change', function() {
-            handleFiles(this.files);
-        });
-        
-        function handleFiles(files) {
-            if (files.length > 0) {
-                const file = files[0];
-                
-                // Check if file is a video
-                if (!file.type.match('video.*')) {
-                    showFieldError('id_video_file', 'Please select a video file');
-                    return;
-                }
-                
-                // Check file size (500MB limit)
-                if (file.size > 500 * 1024 * 1024) {
-                    showFieldError('id_video_file', 'File size exceeds 500MB limit');
-                    return;
-                }
-                
-                // Clear any previous errors
-                clearFieldError('id_video_file');
-                
-                // Preview video
-                const videoURL = URL.createObjectURL(file);
-                previewPlayer.src = videoURL;
-                previewPlayer.style.display = 'block';
-                previewPlaceholder.style.display = 'none';
-                
-                // Enable submit button
-                submitBtn.disabled = false;
-                
-                // Add glow effect to preview
-                videoPreview.style.boxShadow = '0 0 15px rgba(255, 240, 31, 0.5)';
-            }
-        }
-        
-        // Form validation
-        function validateForm() {
-            let isValid = true;
-            const videoFile = document.getElementById('id_video_file').files[0];
-            const title = document.getElementById('id_title').value.trim();
-            const visibility = document.getElementById('id_visibility').value;
+    const dropArea = document.getElementById('drop-area');
+    const fileInput = document.getElementById('id_video_file');
+    const videoPreview = document.getElementById('video-preview');
+    const previewPlayer = document.getElementById('preview-player');
+    const previewPlaceholder = videoPreview.querySelector('.preview-placeholder');
+    const progressContainer = document.getElementById('progress-container');
+    const progressBar = document.getElementById('upload-progress');
+    const progressText = document.getElementById('progress-text');
+    const submitBtn = document.getElementById('submit-btn');
+    const uploadForm = document.getElementById('upload-form');
+    
+    // Add pulse animation to upload card
+    const uploadCard = document.querySelector('.upload-card');
+    setInterval(() => {
+        uploadCard.classList.toggle('pulse');
+    }, 3000);
+    
+    // Prevent default drag behaviors
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    // Highlight drop area when item is dragged over it
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropArea.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, unhighlight, false);
+    });
+    
+    function highlight() {
+        dropArea.classList.add('highlight');
+    }
+    
+    function unhighlight() {
+        dropArea.classList.remove('highlight');
+    }
+    
+    // Handle dropped files
+    dropArea.addEventListener('drop', handleDrop, false);
+    
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        handleFiles(files);
+    }
+    
+    // Handle selected files
+    fileInput.addEventListener('change', function() {
+        handleFiles(this.files);
+    });
+    
+    function handleFiles(files) {
+        if (files.length > 0) {
+            const file = files[0];
             
-            // Clear previous error messages
-            document.querySelectorAll('.field-error').forEach(el => el.remove());
-            document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-            
-            // Validate video file
-            if (!videoFile) {
-                showFieldError('id_video_file', 'This field is required.');
-                isValid = false;
-            }
-            
-            // Validate title
-            if (!title) {
-                showFieldError('id_title', 'This field is required.');
-                isValid = false;
-            } else if (title.length > 100) {
-                showFieldError('id_title', 'Title must be 100 characters or less.');
-                isValid = false;
-            }
-            
-            // Validate visibility
-            if (!visibility) {
-                showFieldError('id_visibility', 'This field is required.');
-                isValid = false;
-            }
-            
-            return isValid;
-        }
-        
-        function showFieldError(fieldId, message) {
-            const field = document.getElementById(fieldId);
-            field.classList.add('is-invalid');
-            
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'field-error text-danger mt-1';
-            errorDiv.innerHTML = `<small>${message}</small>`;
-            field.parentNode.appendChild(errorDiv);
-            
-            // Scroll to the first error
-            if (!window.scrolledToError) {
-                field.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                window.scrolledToError = true;
-            }
-        }
-        
-        function clearFieldError(fieldId) {
-            const field = document.getElementById(fieldId);
-            field.classList.remove('is-invalid');
-            
-            const errorDiv = field.parentNode.querySelector('.field-error');
-            if (errorDiv) {
-                errorDiv.remove();
-            }
-        }
-        
-        // Form submission with progress tracking
-        uploadForm.addEventListener('submit', function(e) {
-            if (!validateForm()) {
-                e.preventDefault();
+            // Check if file is a video
+            if (!file.type.match('video.*')) {
+                showFieldError('id_video_file', 'Please select a video file');
                 return;
             }
             
-            const formData = new FormData(uploadForm);
-            const xhr = new XMLHttpRequest();
+            // Check file size (500MB limit)
+            if (file.size > 500 * 1024 * 1024) {
+                showFieldError('id_video_file', 'File size exceeds 500MB limit');
+                return;
+            }
             
-            // Show progress bar
-            progressContainer.style.display = 'block';
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+            // Clear any previous errors
+            clearFieldError('id_video_file');
             
-            xhr.upload.addEventListener('progress', function(e) {
-                if (e.lengthComputable) {
-                    const percentComplete = (e.loaded / e.total) * 100;
-                    progressBar.style.width = percentComplete + '%';
-                    progressText.textContent = 'Uploading: ' + Math.round(percentComplete) + '%';
-                    
-                    if (percentComplete >= 100) {
-                        progressText.textContent = 'Processing video...';
-                    }
-                }
-            });
+            // Preview video
+            const videoURL = URL.createObjectURL(file);
+            previewPlayer.src = videoURL;
+            previewPlayer.style.display = 'block';
+            previewPlaceholder.style.display = 'none';
             
-            xhr.addEventListener('load', function() {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    // Success - redirect will happen from server
-                    progressText.textContent = 'Upload complete! Redirecting...';
-                } else {
-                    // Error handling
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Upload Video';
-                    progressContainer.style.display = 'none';
-                    alert('Upload failed. Please try again.');
-                }
-            });
+            // Enable submit button
+            submitBtn.disabled = false;
             
-            xhr.addEventListener('error', function() {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Upload Video';
-                progressContainer.style.display = 'none';
-                alert('Upload failed. Please check your connection and try again.');
-            });
-            
-            xhr.open('POST', '', true);
-            xhr.send(formData);
-            
-            // Prevent default form submission
+            // Add glow effect to preview
+            videoPreview.style.boxShadow = '0 0 15px rgba(255, 240, 31, 0.5)';
+        }
+    }
+    
+    // Form validation
+    function validateForm() {
+        let isValid = true;
+        const videoFile = document.getElementById('id_video_file').files[0];
+        const title = document.getElementById('id_title').value.trim();
+        const visibility = document.getElementById('id_visibility').value;
+        
+        // Clear previous error messages
+        document.querySelectorAll('.field-error').forEach(el => el.remove());
+        document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+        
+        // Validate video file
+        if (!videoFile) {
+            showFieldError('id_video_file', 'This field is required.');
+            isValid = false;
+        }
+        
+        // Validate title
+        if (!title) {
+            showFieldError('id_title', 'This field is required.');
+            isValid = false;
+        } else if (title.length > 100) {
+            showFieldError('id_title', 'Title must be 100 characters or less.');
+            isValid = false;
+        }
+        
+        // Validate visibility
+        if (!visibility) {
+            showFieldError('id_visibility', 'This field is required.');
+            isValid = false;
+        }
+        
+        return isValid;
+    }
+    
+    function showFieldError(fieldId, message) {
+        const field = document.getElementById(fieldId);
+        field.classList.add('is-invalid');
+        
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'field-error text-danger mt-1';
+        errorDiv.innerHTML = `<small>${message}</small>`;
+        field.parentNode.appendChild(errorDiv);
+        
+        // Scroll to the first error
+        if (!window.scrolledToError) {
+            field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            window.scrolledToError = true;
+        }
+    }
+    
+    function clearFieldError(fieldId) {
+        const field = document.getElementById(fieldId);
+        field.classList.remove('is-invalid');
+        
+        const errorDiv = field.parentNode.querySelector('.field-error');
+        if (errorDiv) {
+            errorDiv.remove();
+        }
+    }
+    
+    // Form submission with progress tracking
+    uploadForm.addEventListener('submit', function(e) {
+        if (!validateForm()) {
             e.preventDefault();
-        });
-        
-        // Character counters
-        const titleField = document.getElementById('id_title');
-        const descriptionField = document.getElementById('id_description');
-        
-        if (titleField) {
-            const titleCounter = document.createElement('small');
-            titleCounter.className = 'text-muted float-end';
-            titleCounter.textContent = titleField.value.length + '/100';
-            titleField.parentNode.appendChild(titleCounter);
-            
-            titleField.addEventListener('input', function() {
-                titleCounter.textContent = this.value.length + '/100';
-                if (this.value.length > 100) {
-                    titleCounter.classList.add('text-danger');
-                } else {
-                    titleCounter.classList.remove('text-danger');
-                }
-            });
+            return;
         }
         
-        if (descriptionField) {
-            const descCounter = document.createElement('small');
-            descCounter.className = 'text-muted float-end';
-            descCounter.textContent = descriptionField.value.length + '/500';
-            descriptionField.parentNode.appendChild(descCounter);
-            
-            descriptionField.addEventListener('input', function() {
-                descCounter.textContent = this.value.length + '/500';
-                if (this.value.length > 500) {
-                    descCounter.classList.add('text-danger');
-                } else {
-                    descCounter.classList.remove('text-danger');
+        // Show progress UI but let the form submit normally
+        progressContainer.style.display = 'block';
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+        
+        // Create a global progress bar for the page
+        const globalProgressBar = document.createElement('div');
+        globalProgressBar.className = 'global-progress-bar';
+        globalProgressBar.innerHTML = `
+            <div class="global-progress-container">
+                <div class="global-progress-bar-inner"></div>
+                <div class="global-progress-text">Uploading your video...</div>
+            </div>
+        `;
+        document.body.appendChild(globalProgressBar);
+        
+        // Simulate progress for better UX (since we can't track actual progress with regular form submission)
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += 2;
+            if (progress <= 90) {
+                const progressBarInner = document.querySelector('.global-progress-bar-inner');
+                if (progressBarInner) {
+                    progressBarInner.style.width = progress + '%';
                 }
-            });
-        }
+            }
+        }, 500);
+        
+        // Store the interval so we can clear it if needed
+        window.uploadProgressInterval = progressInterval;
+        
+        // Let the form submit normally - the browser will handle redirects
+        // Remove the e.preventDefault() to allow normal form submission
     });
+    
+    // Character counters
+    const titleField = document.getElementById('id_title');
+    const descriptionField = document.getElementById('id_description');
+    
+    if (titleField) {
+        const titleCounter = document.createElement('small');
+        titleCounter.className = 'text-muted float-end';
+        titleCounter.textContent = titleField.value.length + '/100';
+        titleField.parentNode.appendChild(titleCounter);
+        
+        titleField.addEventListener('input', function() {
+            titleCounter.textContent = this.value.length + '/100';
+            if (this.value.length > 100) {
+                titleCounter.classList.add('text-danger');
+            } else {
+                titleCounter.classList.remove('text-danger');
+            }
+        });
+    }
+    
+    if (descriptionField) {
+        const descCounter = document.createElement('small');
+        descCounter.className = 'text-muted float-end';
+        descCounter.textContent = descriptionField.value.length + '/500';
+        descriptionField.parentNode.appendChild(descCounter);
+        
+        descriptionField.addEventListener('input', function() {
+            descCounter.textcontent = this.value.length + '/500';
+            if (this.value.length > 500) {
+                descCounter.classList.add('text-danger');
+            } else {
+                descCounter.classList.remove('text-danger');
+            }
+        });
+    }
+});
 </script>
 {% endblock %}
