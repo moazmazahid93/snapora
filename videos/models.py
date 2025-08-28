@@ -1,10 +1,15 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils.text import slugify
+from django.core.validators import FileExtensionValidator
+from storages.backends.azure_storage import AzureStorage  # Add this import
 import uuid
 import os
 
 User = get_user_model()
+
+# Create AzureStorage instance at the module level
+azure_storage = AzureStorage()
 
 class Tag(models.Model):
     name = models.CharField(max_length=50, unique=True)
@@ -22,18 +27,21 @@ class Video(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='videos')
     
-    # Increased max_length to 200
+    # Use AzureStorage for video files
     video_file = models.FileField(
         upload_to='videos/', 
-        max_length=200  # Increased from default 100
+        max_length=200,
+        storage=azure_storage,  # Add this line to use Azure Storage
+        validators=[FileExtensionValidator(allowed_extensions=['mp4', 'webm', 'avi', 'mov', 'mkv'])]
     )
     
-    # Also increased max_length for thumbnail
+    # Use AzureStorage for thumbnails
     thumbnail = models.ImageField(
         upload_to='thumbnails/', 
         blank=True, 
         null=True,
-        max_length=200  # Added max_length
+        max_length=200,
+        storage=azure_storage  # Add this line to use Azure Storage
     )
     
     title = models.CharField(max_length=100)
