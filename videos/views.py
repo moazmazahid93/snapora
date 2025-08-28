@@ -16,6 +16,8 @@ from interactions.models import Like, View
 
 logger = logging.getLogger(__name__)
 
+# In your views.py, update the upload_video function:
+
 @login_required
 def upload_video(request):
     if request.method == 'POST':
@@ -31,8 +33,7 @@ def upload_video(request):
                     messages.error(request, 'File size exceeds 500MB limit')
                     return render(request, 'videos/upload.html', {'form': form})
                 
-                # Let Django-storages handle the file upload to Azure
-                # Just save the model and the files will be uploaded automatically
+                # Save the model first to get an ID
                 video.save()
                 
                 # Handle tags using the form's save_m2m() method
@@ -43,7 +44,7 @@ def upload_video(request):
                 if tags_input:
                     tag_names = [tag.strip() for tag in tags_input.split(',') if tag.strip()]
                     tags = []
-                    for tag_name in tag_names:
+                    for tag_name in tag_names[:5]:  # Limit to 5 tags
                         tag, created = Tag.objects.get_or_create(
                             name=tag_name.lower(),
                             defaults={'slug': tag_name.lower().replace(' ', '-')}
@@ -65,7 +66,10 @@ def upload_video(request):
                     messages.error(request, f'An error occurred while uploading the video: {str(e)}')
         else:
             logger.error(f"Form validation errors: {form.errors}")
-            messages.error(request, 'Please correct the errors below.')
+            # Add form errors to messages for better user feedback
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
     else:
         form = VideoUploadForm()
     
