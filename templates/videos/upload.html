@@ -13,6 +13,35 @@
         </div>
         
         <div class="card-body">
+            <!-- Error Alert -->
+            {% if form.errors %}
+            <div class="alert alert-danger neon-alert">
+                <h5><i class="fas fa-exclamation-triangle me-2"></i> Please correct the following errors:</h5>
+                <ul class="mb-0">
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <li>{{ field|title }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            
+            <!-- Messages -->
+            {% if messages %}
+            <div class="messages-container">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} neon-alert-{{ message.tags }}">
+                    <i class="fas 
+                        {% if message.tags == 'success' %}fa-check-circle
+                        {% elif message.tags == 'error' or message.tags == 'danger' %}fa-exclamation-circle
+                        {% else %}fa-info-circle{% endif %} me-2"></i>
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
             <form method="post" enctype="multipart/form-data" id="upload-form">
                 {% csrf_token %}
                 
@@ -21,7 +50,7 @@
                     <div class="upload-preview">
                         <div class="file-drop-area neon-drop-area" id="drop-area">
                             <div class="file-input-wrapper">
-                                <input type="file" id="id_video_file" name="video_file" accept="video/*" class="file-input">
+                                <input type="file" id="id_video_file" name="video_file" accept="video/*" class="file-input" required>
                                 <label for="id_video_file" class="file-label">
                                     <div class="upload-icon neon-icon">
                                         <i class="fas fa-video"></i>
@@ -100,6 +129,9 @@
         --neon-yellow: #fff01f;
         --neon-yellow-dark: #e6d800;
         --neon-yellow-light: #ffff70;
+        --neon-red: #ff355e;
+        --neon-green: #66ff66;
+        --neon-blue: #4361ee;
         --dark-bg: #121212;
         --darker-bg: #1a1a1a;
         --card-bg: #1e1e1e;
@@ -108,6 +140,12 @@
         --neon-glow: 0 0 10px rgba(255, 240, 31, 0.8), 
                       0 0 20px rgba(255, 240, 31, 0.6),
                       0 0 30px rgba(255, 240, 31, 0.4);
+        --neon-red-glow: 0 0 10px rgba(255, 53, 94, 0.8), 
+                         0 0 20px rgba(255, 53, 94, 0.6),
+                         0 0 30px rgba(255, 53, 94, 0.4);
+        --neon-green-glow: 0 0 10px rgba(102, 255, 102, 0.8), 
+                           0 0 20px rgba(102, 255, 102, 0.6),
+                           0 0 30px rgba(102, 255, 102, 0.4);
     }
     
     body {
@@ -225,6 +263,30 @@
     
     .card-body {
         padding: 2rem;
+    }
+    
+    /* Alert Styles */
+    .neon-alert {
+        background: rgba(220, 53, 69, 0.1);
+        border: 1px solid rgba(220, 53, 69, 0.3);
+        color: #f8d7da;
+        border-radius: 8px;
+        box-shadow: var(--neon-red-glow);
+        margin-bottom: 1.5rem;
+    }
+    
+    .neon-alert-success {
+        background: rgba(40, 167, 69, 0.1);
+        border: 1px solid rgba(40, 167, 69, 0.3);
+        color: #d4edda;
+        box-shadow: var(--neon-green-glow);
+    }
+    
+    .neon-alert-info {
+        background: rgba(23, 162, 184, 0.1);
+        border: 1px solid rgba(23, 162, 184, 0.3);
+        color: #d1ecf1;
+        box-shadow: 0 0 10px rgba(23, 162, 184, 0.5);
     }
     
     /* Upload Section */
@@ -351,6 +413,10 @@
     }
     
     /* Crispy Forms Overrides */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
     .form-group label {
         font-weight: 500;
         color: var(--neon-yellow);
@@ -373,6 +439,22 @@
     
     .text-muted {
         color: var(--text-muted) !important;
+    }
+    
+    /* Error Styles */
+    .field-error {
+        animation: shake 0.5s;
+    }
+    
+    .is-invalid {
+        border-color: var(--neon-red) !important;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+    }
+    
+    @keyframes shake {
+        0%, 100% {transform: translateX(0);}
+        20%, 60% {transform: translateX(-5px);}
+        40%, 80% {transform: translateX(5px);}
     }
     
     /* Animations */
@@ -400,6 +482,15 @@
         
         .card-body {
             padding: 1.5rem;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .neon-btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
         }
     }
 </style>
@@ -470,15 +561,18 @@
                 
                 // Check if file is a video
                 if (!file.type.match('video.*')) {
-                    alert('Please select a video file');
+                    showFieldError('id_video_file', 'Please select a video file');
                     return;
                 }
                 
                 // Check file size (500MB limit)
                 if (file.size > 500 * 1024 * 1024) {
-                    alert('File size exceeds 500MB limit');
+                    showFieldError('id_video_file', 'File size exceeds 500MB limit');
                     return;
                 }
+                
+                // Clear any previous errors
+                clearFieldError('id_video_file');
                 
                 // Preview video
                 const videoURL = URL.createObjectURL(file);
@@ -494,13 +588,81 @@
             }
         }
         
+        // Form validation
+        function validateForm() {
+            let isValid = true;
+            const videoFile = document.getElementById('id_video_file').files[0];
+            const title = document.getElementById('id_title').value.trim();
+            const visibility = document.getElementById('id_visibility').value;
+            
+            // Clear previous error messages
+            document.querySelectorAll('.field-error').forEach(el => el.remove());
+            document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            
+            // Validate video file
+            if (!videoFile) {
+                showFieldError('id_video_file', 'This field is required.');
+                isValid = false;
+            }
+            
+            // Validate title
+            if (!title) {
+                showFieldError('id_title', 'This field is required.');
+                isValid = false;
+            } else if (title.length > 100) {
+                showFieldError('id_title', 'Title must be 100 characters or less.');
+                isValid = false;
+            }
+            
+            // Validate visibility
+            if (!visibility) {
+                showFieldError('id_visibility', 'This field is required.');
+                isValid = false;
+            }
+            
+            return isValid;
+        }
+        
+        function showFieldError(fieldId, message) {
+            const field = document.getElementById(fieldId);
+            field.classList.add('is-invalid');
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'field-error text-danger mt-1';
+            errorDiv.innerHTML = `<small>${message}</small>`;
+            field.parentNode.appendChild(errorDiv);
+            
+            // Scroll to the first error
+            if (!window.scrolledToError) {
+                field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                window.scrolledToError = true;
+            }
+        }
+        
+        function clearFieldError(fieldId) {
+            const field = document.getElementById(fieldId);
+            field.classList.remove('is-invalid');
+            
+            const errorDiv = field.parentNode.querySelector('.field-error');
+            if (errorDiv) {
+                errorDiv.remove();
+            }
+        }
+        
         // Form submission with progress tracking
         uploadForm.addEventListener('submit', function(e) {
+            if (!validateForm()) {
+                e.preventDefault();
+                return;
+            }
+            
             const formData = new FormData(uploadForm);
             const xhr = new XMLHttpRequest();
             
             // Show progress bar
             progressContainer.style.display = 'block';
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
             
             xhr.upload.addEventListener('progress', function(e) {
                 if (e.lengthComputable) {
@@ -514,8 +676,31 @@
                 }
             });
             
+            xhr.addEventListener('load', function() {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    // Success - redirect will happen from server
+                    progressText.textContent = 'Upload complete! Redirecting...';
+                } else {
+                    // Error handling
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Upload Video';
+                    progressContainer.style.display = 'none';
+                    alert('Upload failed. Please try again.');
+                }
+            });
+            
+            xhr.addEventListener('error', function() {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Upload Video';
+                progressContainer.style.display = 'none';
+                alert('Upload failed. Please check your connection and try again.');
+            });
+            
             xhr.open('POST', '', true);
             xhr.send(formData);
+            
+            // Prevent default form submission
+            e.preventDefault();
         });
         
         // Character counters
