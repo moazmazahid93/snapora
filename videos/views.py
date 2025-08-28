@@ -33,10 +33,47 @@ def upload_video(request):
                     messages.error(request, 'File size exceeds 500MB limit')
                     return render(request, 'videos/upload.html', {'form': form})
                 
-                # Save the model first to get an ID
+                # Debug: Check what storage is being used
+                from django.core.files.storage import default_storage
+                logger.info(f"Default storage: {type(default_storage).__name__}")
+                
+                # Debug: Check file details
+                logger.info(f"Uploading file: {video_file.name}, Size: {video_file.size}")
+                
+                # Save the model - this should trigger Azure upload
                 video.save()
                 
-                # Handle tags using the form's save_m2m() method
+                # Debug: Check if file was saved to Azure
+                if hasattr(video.video_file, 'storage'):
+                    logger.info(f"Using storage: {type(video.video_file.storage).__name__}")
+                    logger.info(f"Storage class: {video.video_file.storage.__class__}")
+                
+                if video.video_file:
+                    logger.info(f"Video file saved to: {video.video_file.name}")
+                    try:
+                        # Try to get the URL and check if file exists
+                        file_url = video.video_file.url
+                        logger.info(f"Video file URL: {file_url}")
+                        
+                        # Check if file actually exists in storage
+                        file_exists = video.video_file.storage.exists(video.video_file.name)
+                        logger.info(f"File exists in storage: {file_exists}")
+                        
+                        if not file_exists:
+                            logger.error("File was not uploaded to Azure Storage!")
+                            messages.error(request, "File upload failed. Please try again.")
+                            return render(request, 'videos/upload.html', {'form': form})
+                            
+                    except Exception as url_error:
+                        logger.error(f"Error getting URL or checking file existence: {url_error}")
+                        messages.error(request, "File upload failed. Please try again.")
+                        return render(request, 'videos/upload.html', {'form': form})
+                else:
+                    logger.error("Video file was not saved properly")
+                    messages.error(request, "File upload failed. Please try again.")
+                    return render(request, 'videos/upload.html', {'form': form})
+                
+                # Handle tags
                 form.save_m2m()
                 
                 # Process tags manually if needed
@@ -56,17 +93,19 @@ def upload_video(request):
                 return redirect('videos:watch', video_id=video.id)
                 
             except Exception as e:
-                logger.error(f"Error uploading video: {str(e)}")
+                logger.error(f"Error uploading video: {str(e)}", exc_info=True)
                 # More specific error messages
-                if "permission" in str(e).lower():
+                error_msg = str(e).lower()
+                if "permission" in error_msg or "authorization" in error_msg:
                     messages.error(request, 'Azure Storage permission denied. Check your credentials.')
-                elif "connection" in str(e).lower():
+                elif "connection" in error_msg or "network" in error_msg:
                     messages.error(request, 'Could not connect to Azure Storage. Check network connection.')
+                elif "container" in error_msg:
+                    messages.error(request, 'Azure container not found. Please check container name.')
                 else:
                     messages.error(request, f'An error occurred while uploading the video: {str(e)}')
         else:
             logger.error(f"Form validation errors: {form.errors}")
-            # Add form errors to messages for better user feedback
             for field, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, f"{field}: {error}")
@@ -74,8 +113,7 @@ def upload_video(request):
         form = VideoUploadForm()
     
     return render(request, 'videos/upload.html', {'form': form})
-
-# ADDED THE MISSING FUNCTION DEFINITION LINE HERE
+    
 def watch_video(request, video_id):
     try:
         video = get_object_or_404(
